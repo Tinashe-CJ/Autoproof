@@ -15,137 +15,111 @@ AI-Powered Compliance Automation Backend built with FastAPI, PostgreSQL, Clerk, 
 
 ### Prerequisites
 
-- Python 3.11+
-- PostgreSQL
-- Clerk account
-- Stripe account
-- OpenAI API key
+- Node.js 18+
+- Supabase account
+- Clerk account (for authentication)
+- Stripe account (for billing)
 
 ### Installation
 
-1. **Clone and setup virtual environment:**
+1. **Clone and install dependencies:**
    ```bash
-   git clone <repository>
-   cd autoproof-backend
-   
-   # Create virtual environment (required for macOS due to PEP 668)
-   python3 -m venv .venv
-   source .venv/bin/activate
-   
-   # Install dependencies
-   pip install -r requirements.txt
+   npm install
    ```
 
-2. **Environment Configuration:**
+2. **Set up environment variables:**
    ```bash
    cp .env.example .env
-   # Edit .env with your actual credentials
+   # Edit .env with your Supabase, Clerk, and Stripe credentials
    ```
 
-3. **Database Setup:**
+3. **Configure Services:**
    ```bash
-   # Create PostgreSQL database
-   createdb autoproof
-   
-   # Run migrations
-   alembic upgrade head
+   # Set up Supabase project and get your URL and keys
+   # Set up Clerk authentication
+   # Set up Stripe billing with your products and prices
    ```
 
 4. **Start the server:**
    ```bash
-   uvicorn main:app --reload
+   npm run dev
    ```
 
-The API will be available at `http://localhost:8000` with interactive docs at `http://localhost:8000/docs`.
+The application will be available at `http://localhost:5173`.
 
-## API Endpoints
+## Features
 
-### Analysis
-- `POST /api/analyze` - Analyze content for compliance violations
-- `POST /api/analyze/batch` - Batch analysis for multiple items
+### Authentication
+- Secure user authentication with Clerk
+- User profile management
+- Protected routes and dashboard
 
-### Usage & Billing
-- `GET /api/usage` - Get usage statistics and limits
-- `GET /api/billing` - Get billing information
-- `POST /api/billing/upgrade` - Upgrade/downgrade plan
-- `POST /api/stripe/webhook` - Stripe webhook handler
+### Billing & Subscriptions
+- Stripe integration for subscription management
+- Multiple pricing tiers (Starter, Growth, Business)
+- Secure checkout process
+- Subscription status tracking
 
-### API Keys
-- `GET /api/api-keys` - List team API keys
-- `POST /api/api-keys` - Create new API key
-- `DELETE /api/api-keys/{id}` - Delete API key
+### Database
+- Supabase for data storage
+- Row Level Security (RLS) policies
+- Real-time subscriptions
 
-### Team Management
-- `GET /api/team` - Get team information
-- `PUT /api/team` - Update team settings
+## Pricing Plans
 
-## Plan Limits
-
-| Plan | Monthly Price | Requests | Tokens |
-|------|---------------|----------|---------|
-| Starter | $30 | 1,000 | 100,000 |
-| Growth | $100 | 5,000 | 500,000 |
-| Business | $300 | 50,000 | 5,000,000 |
+| Plan | Monthly Price | Features |
+|------|---------------|----------|
+| Starter | $30.00 | Up to 3 team members, basic features |
+| Growth | $75.00 | Up to 10 team members, advanced features |
+| Business | $300.00 | Unlimited members, enterprise features |
 
 ## Authentication
 
-### Clerk JWT (Web App)
-Include Clerk session token in Authorization header:
-```
-Authorization: Bearer <clerk_jwt_token>
-```
+The application uses Clerk for authentication, providing:
+- Email/password authentication
+- Social login options
+- User profile management
+- Session management
 
-### API Keys (Programmatic Access)
-Include API key in header:
-```
-X-API-Key: ap_<your_api_key>
-```
+## Stripe Integration
+
+The app includes full Stripe integration:
+- Subscription management
+- Secure checkout sessions
+- Webhook handling for real-time updates
+- Customer and subscription tracking
+
+### Setting up Stripe
+
+1. Create products in your Stripe dashboard
+2. Update the price IDs in `src/stripe-config.ts`
+3. Set up webhook endpoints for subscription updates
+4. Add your Stripe keys to the `.env` file
 
 ## Development
 
-### Database Migrations
-```bash
-# Create new migration
-alembic revision --autogenerate -m "Description"
+### Project Structure
+- `src/components/` - React components
+- `src/lib/` - Utility functions and configurations
+- `supabase/` - Database migrations and edge functions
+- `src/stripe-config.ts` - Stripe product configuration
 
-# Apply migrations
-alembic upgrade head
-```
-
-### Testing
-```bash
-pytest
-```
-
-### Code Structure
-```
-├── main.py              # FastAPI app entry point
-├── config/              # Configuration and database setup
-├── models/              # SQLAlchemy models
-├── routers/             # API route handlers
-├── services/            # Business logic services
-├── auth.py              # Authentication middleware
-└── alembic/             # Database migrations
-```
-
-## Production Deployment
-
-1. Set `DEBUG=False` in environment
-2. Use production database URL
-3. Configure proper CORS origins
-4. Set up SSL/TLS termination
-5. Use production Stripe keys
-6. Configure webhook endpoints
+### Key Components
+- Authentication with Clerk
+- Pricing page with Stripe integration
+- Dashboard for user management
+- Supabase for data persistence
 
 ## Environment Variables
 
-See `.env.example` for all required environment variables including:
-- Database connection
-- Clerk authentication keys
-- Stripe API keys and webhook secrets
-- OpenAI API key
-- CORS configuration
+Required environment variables:
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `VITE_CLERK_PUBLISHABLE_KEY` - Clerk publishable key
+- `CLERK_SECRET_KEY` - Clerk secret key
+- `STRIPE_SECRET_KEY` - Stripe secret key
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook secret
 
 ## Support
 
-For issues and questions, please check the API documentation at `/docs` or contact support.
+For issues and questions, please check the documentation or contact support.

@@ -86,11 +86,10 @@ const Home = () => {
 
                 <Button
                   variant="outline"
-                 className="bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white font-medium px-8 py-6 h-auto"
+                  onClick={() => window.location.href = '/pricing'}
                   className="border-slate-400 text-slate-300 hover:bg-slate-800 hover:text-white px-8 py-6 h-auto bg-transparent"
                 >
                   <MessageSquare className="mr-2 h-5 w-5" />
-                 <ArrowRight className="ml-2 h-5 w-5" />
                   View Pricing
                 </Button>
               </div>

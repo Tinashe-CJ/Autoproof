@@ -1,6 +1,38 @@
-.venv/
+# Ignore environment and secret files
 .env
-node_modules
-dist
-__pychache__
-.next
+.env.*
+*.env
+
+# Ignore test and debug scripts
+check_billing_info_and_team.py
+check_billing_data.py
+fix_stripe_customer.py
+cleanup_billing.py
+update_customer_metadata.py
+update_billing_info.py
+test_db_connection.py
+test_ssl_connection.py
+test_connection_methods.py
+create_test_user.py
+setup_database.py
+reset_database.py
+test_stripe.py
+list_stripe_prices.py
+get_long_jwt.sh
+check_stripe_config.py
+test_trial.py
+test_checkout_plans.py
+refresh_jwt.sh
+test_auth.py
+debug_auth.js
+
+# Ignore node and Python artifacts
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Ignore Supabase generated files
+supabase/.env
+supabase/.temp
+supabase/.output

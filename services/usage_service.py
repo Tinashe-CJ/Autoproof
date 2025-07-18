@@ -1,7 +1,8 @@
 from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, select
+from sqlalchemy.orm import aliased
 from models.team import Team, PlanType
 from models.usage_log import UsageLog
 from models.billing import BillingInfo
@@ -182,3 +183,23 @@ class UsageService:
             "overage_tokens": overage_data["overage_tokens"],
             "breakdown": overage_data
         }
+
+    async def get_current_plan_for_user(self, db: Session, user_id: str):
+        """Fetch the current plan for a user from Supabase stripe_subscriptions."""
+        # Join stripe_customers and stripe_subscriptions
+        result = db.execute(
+            select(
+                "stripe_subscriptions.price_id",
+                "stripe_subscriptions.status"
+            ).select_from(
+                "stripe_customers"
+            ).join(
+                "stripe_subscriptions",
+                "stripe_customers.customer_id" == "stripe_subscriptions.customer_id"
+            ).where(
+                "stripe_customers.user_id" == user_id
+            )
+        ).first()
+        if result:
+            return {"price_id": result[0], "status": result[1]}
+        return None

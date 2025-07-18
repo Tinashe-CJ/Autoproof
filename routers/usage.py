@@ -4,8 +4,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from config.database import get_db
 from auth import get_current_user
-from models.user import User
-from models.team import Team
+from models.user import User as SAUser
+from models.team import Team as SATeam
+from fastapi import HTTPException
 from services.usage_service import UsageService
 
 router = APIRouter()
@@ -21,26 +22,47 @@ class UsageResponse(BaseModel):
 @router.get("/usage", response_model=UsageResponse)
 async def get_usage_info(
     days: int = Query(30, description="Number of days for analytics"),
-    current_user: User = Depends(get_current_user),
+    current_user=Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get comprehensive usage information for the user's team"""
-    
-    team = db.query(Team).filter(Team.id == current_user.team_id).first()
+    # Extract Clerk claims
+    clerk_user_id = current_user.get("sub")
+    email = current_user.get("email")
+    org_id = current_user.get("org_id")
+    org_name = current_user.get("org_name", "Team")
+    first_name = current_user.get("first_name", "")
+    last_name = current_user.get("last_name", "")
+
+    # Look up or create team
+    team = db.query(SATeam).filter(SATeam.id == org_id).first()
     if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
-    
+        team = SATeam(id=org_id, name=org_name)
+        db.add(team)
+        db.commit()
+        db.refresh(team)
+
+    # Look up or create user
+    user = db.query(SAUser).filter(SAUser.id == clerk_user_id).first()
+    if not user:
+        user = SAUser(
+            id=clerk_user_id,
+            clerk_id=clerk_user_id,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            team_id=org_id,
+            is_active=True
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
     usage_service = UsageService()
-    
-    # Get current usage limits and status
     usage_limits = await usage_service.check_usage_limits(team)
-    
-    # Get overage information
     overage_info = await usage_service.calculate_current_overage(db, team)
-    
-    # Get usage analytics
     analytics = await usage_service.get_usage_analytics(db, team.id, days)
-    
+
     return UsageResponse(
         current_period={
             "requests_used": usage_limits["requests_used"],

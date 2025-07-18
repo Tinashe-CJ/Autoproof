@@ -5,12 +5,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { getUserSubscription } from '@/lib/supabase';
 import { getProductByPriceId } from '@/stripe-config';
-import { User, LogOut, CreditCard, Settings } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { 
+  User, 
+  LogOut, 
+  CreditCard, 
+  Settings, 
+  Loader2, 
+  Zap, 
+  Shield, 
+  Activity, 
+  TrendingUp, 
+  CheckCircle, 
+  AlertCircle,
+  ArrowRight,
+  Star,
+  Calendar,
+  Users
+} from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useApiAuth } from '@/lib/auth';
+import { buildApiUrl, API_CONFIG } from '@/config/api';
+import Footer from '../Footer';
 
 const Dashboard = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { getAuthHeaders, isSignedIn } = useApiAuth();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -18,9 +39,16 @@ const Dashboard = () => {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        if (user) {
-          const { data: subscriptionData } = await getUserSubscription();
-          setSubscription(subscriptionData);
+        if (user && isSignedIn) {
+          const headers = await getAuthHeaders();
+          const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.BILLING), {
+            headers,
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setSubscription(data);
+          }
         }
       } catch (error) {
         console.error('Error loading user data:', error);
@@ -30,7 +58,7 @@ const Dashboard = () => {
     };
 
     loadUserData();
-  }, [user]);
+  }, [user, isSignedIn, getAuthHeaders]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -38,10 +66,11 @@ const Dashboard = () => {
   };
 
   const getCurrentPlan = () => {
-    if (!subscription?.price_id) return 'Free';
+    if (!subscription?.current_plan) return 'Free';
     
-    const product = getProductByPriceId(subscription.price_id);
-    return product?.name || 'Unknown';
+    // Capitalize the first letter to match the plan names
+    const planName = subscription.current_plan.charAt(0).toUpperCase() + subscription.current_plan.slice(1);
+    return planName;
   };
 
   const getSubscriptionStatus = () => {
@@ -58,48 +87,105 @@ const Dashboard = () => {
       'paused': 'Paused'
     };
 
-    return statusMap[subscription.subscription_status] || subscription.subscription_status;
+    return statusMap[subscription.status] || subscription.status;
   };
 
   const getPlanPrice = () => {
-    if (!subscription?.price_id) return null;
+    if (!subscription?.current_plan) return 'Free';
     
-    const product = getProductByPriceId(subscription.price_id);
-    return product ? `$${product.price}/month` : null;
+    const planPrices = {
+      'starter': 30,
+      'growth': 75,
+      'business': 300
+    };
+    
+    const price = planPrices[subscription.current_plan as keyof typeof planPrices];
+    return price ? `$${price}/month` : 'Free';
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
+      case 'trialing':
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'past_due':
+      case 'unpaid':
+        return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case 'canceled':
+        return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+      default:
+        return 'bg-slate-500/20 text-slate-400 border-slate-500/30';
+    }
+  };
+
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading dashboard...</p>
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
+          </div>
+          <p className="text-slate-300">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+      <div className="absolute h-full w-full bg-gradient-to-b from-slate-900/50 to-slate-900/20" />
+
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
+          <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold">A</span>
+              <Link to="/">
+                <div className="w-10 h-10 rounded-md bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">A</span>
+                </div>
+              </Link>
+              <div>
+                <Link to="/">
+                  <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+                </Link>
+                <p className="text-slate-400 text-sm">Welcome back, {user?.firstName}!</p>
               </div>
-              <h1 className="text-xl font-semibold">AutoProof Dashboard</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Badge variant="outline" className="text-sm">
+              <Badge 
+                className={`text-sm font-medium ${
+                  getCurrentPlan() !== 'Free' 
+                    ? 'bg-gradient-to-r from-blue-500/20 to-violet-500/20 text-blue-300 border border-blue-500/30' 
+                    : 'bg-slate-700/60 text-slate-300 border border-slate-600/50'
+                }`}
+              >
+                <Star className="h-3 w-3 mr-1" />
                 {getCurrentPlan()}
               </Badge>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/user-profile')}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate('/user-profile')}
+                className="text-white hover:bg-white/10 border border-white/20"
+              >
                 <User className="h-4 w-4 mr-2" />
                 Profile
               </Button>
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleSignOut}
+                className="text-white hover:bg-white/10 border border-white/20"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
@@ -109,106 +195,343 @@ const Dashboard = () => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* User Info Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Account</CardTitle>
-              <User className="h-4 w-4 ml-auto text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{user?.emailAddresses[0]?.emailAddress}</div>
-              <p className="text-xs text-muted-foreground">
-                {user?.firstName} {user?.lastName}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Member since {new Date(user?.createdAt || '').toLocaleDateString()}
-              </p>
-            </CardContent>
-          </Card>
-
-          {/* Subscription Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Subscription</CardTitle>
-              <CreditCard className="h-4 w-4 ml-auto text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{getCurrentPlan()}</div>
-              {getPlanPrice() && (
-                <p className="text-sm text-muted-foreground">{getPlanPrice()}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Status: {getSubscriptionStatus()}
-              </p>
-              {subscription?.current_period_end && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Renews: {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
-                </p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Quick Actions Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-              <Settings className="h-4 w-4 ml-auto text-muted-foreground" />
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full justify-start"
-                onClick={() => navigate('/pricing')}
-              >
-                <CreditCard className="h-4 w-4 mr-2" />
-                Manage Subscription
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Welcome Section */}
-        <div className="mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Welcome to AutoProof, {user?.firstName}!</CardTitle>
-              <CardDescription>
-                Your AI-powered compliance automation platform is ready to help you maintain compliance without slowing down development.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <h4 className="font-medium">Getting Started</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Connect your Slack workspace</li>
-                    <li>• Integrate with GitHub repositories</li>
-                    <li>• Configure compliance policies</li>
-                    <li>• Start monitoring for violations</li>
-                  </ul>
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Overview */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUp}
+        >
+          <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm font-medium">Current Plan</p>
+                  <p className="text-2xl font-bold text-white mt-1">{getCurrentPlan()}</p>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-medium">Current Plan: {getCurrentPlan()}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {getCurrentPlan() === 'Free' 
-                      ? 'Upgrade to unlock advanced features and higher limits.'
-                      : 'You have access to all features in your current plan.'
-                    }
-                  </p>
-                  {getCurrentPlan() === 'Free' && (
-                    <Button size="sm" onClick={() => navigate('/pricing')}>
-                      Upgrade Plan
-                    </Button>
-                  )}
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-white" />
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm font-medium">Status</p>
+                  <p className="text-2xl font-bold text-white mt-1">{getSubscriptionStatus()}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm font-medium">Monthly Cost</p>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    {getPlanPrice().replace('/month', '')}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-violet-500 to-purple-500 flex items-center justify-center">
+                  <CreditCard className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm font-medium">Team Members</p>
+                  <p className="text-2xl font-bold text-white mt-1">
+                    {getCurrentPlan() === 'Starter' ? '3' : getCurrentPlan() === 'Growth' ? '10' : '∞'}
+                  </p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Account & Subscription */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Account Overview */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ delay: 0.1 }}
+            >
+              <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <User className="h-5 w-5 mr-2 text-blue-400" />
+                    Account Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center space-x-4 p-4 bg-slate-700/40 rounded-lg border border-slate-600/30">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {user?.firstName?.[0]}{user?.lastName?.[0]}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-white font-medium">
+                        {user?.firstName} {user?.lastName}
+                      </p>
+                      <p className="text-slate-400 text-sm">
+                        {user?.emailAddresses[0]?.emailAddress}
+                      </p>
+                      <p className="text-slate-500 text-xs">
+                        Member since {new Date(user?.createdAt || '').toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30">
+                      <p className="text-slate-400 text-sm font-medium">Current Plan</p>
+                      <p className="text-xl font-bold text-white mt-1">{getCurrentPlan()}</p>
+                      {getPlanPrice() && (
+                        <p className="text-slate-400 text-sm mt-1">{getPlanPrice()}</p>
+                      )}
+                    </div>
+                    
+                    <div className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30">
+                      <p className="text-slate-400 text-sm font-medium">Subscription Status</p>
+                      <div className="flex items-center mt-1">
+                        <Badge 
+                          className={`text-xs ${getStatusColor(getSubscriptionStatus())}`}
+                        >
+                          {getSubscriptionStatus()}
+                        </Badge>
+                      </div>
+                      {subscription?.current_period_end && (
+                        <p className="text-slate-500 text-xs mt-2">
+                          Renews: {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Getting Started */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Zap className="h-5 w-5 mr-2 text-blue-400" />
+                    Getting Started
+                  </CardTitle>
+                  <CardDescription className="text-slate-400">
+                    Set up your compliance automation in just a few steps
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {[
+                      { 
+                        title: 'Connect Slack Workspace', 
+                        description: 'Integrate with your team communication',
+                        icon: Activity,
+                        completed: false
+                      },
+                      { 
+                        title: 'Link GitHub Repositories', 
+                        description: 'Connect your code repositories',
+                        icon: TrendingUp,
+                        completed: false
+                      },
+                      { 
+                        title: 'Configure Policies', 
+                        description: 'Set up compliance rules and alerts',
+                        icon: Shield,
+                        completed: false
+                      },
+                      { 
+                        title: 'Start Monitoring', 
+                        description: 'Begin automated compliance checks',
+                        icon: CheckCircle,
+                        completed: false
+                      }
+                    ].map((step, index) => (
+                      <div key={index} className="flex items-start space-x-4 p-4 bg-slate-700/40 rounded-lg border border-slate-600/30">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          step.completed 
+                            ? 'bg-green-500/20 border border-green-500/30' 
+                            : 'bg-slate-600/60 border border-slate-500/50'
+                        }`}>
+                          {step.completed ? (
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                          ) : (
+                            <step.icon className="h-4 w-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{step.title}</p>
+                          <p className="text-slate-400 text-sm">{step.description}</p>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="text-slate-400 hover:text-white hover:bg-white/10"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Right Column - Quick Actions & Status */}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Settings className="h-5 w-5 mr-2 text-blue-400" />
+                    Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    className={`w-full justify-start ${getCurrentPlan() === 'Free' ? 'bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0' : 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0'}`}
+                    onClick={() => navigate(getCurrentPlan() === 'Free' ? '/pricing' : '/billing')}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" />
+                    {getCurrentPlan() === 'Free' ? 'Choose Plan' : 'Manage Subscription'}
+                  </Button>
+                  
+                  <Button 
+                    className="w-full justify-start bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0"
+                    onClick={() => navigate('/pricing')}
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    View All Plans
+                  </Button>
+                  
+                  <Button 
+                    className="w-full justify-start bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0"
+                    onClick={() => navigate('/analytics')}
+                  >
+                    <Activity className="h-4 w-4 mr-2" />
+                    View Analytics
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* System Status */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ delay: 0.4 }}
+            >
+              <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Shield className="h-5 w-5 mr-2 text-blue-400" />
+                    System Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                    <div className="flex items-center">
+                      <div className="w-2 h-2 rounded-full bg-green-400 mr-3"></div>
+                      <span className="text-green-400 text-sm font-medium">All Systems Operational</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">API Status</span>
+                      <span className="text-green-400">✓ Online</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">Database</span>
+                      <span className="text-green-400">✓ Online</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-400">Monitoring</span>
+                      <span className="text-green-400">✓ Active</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Recent Activity */}
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={fadeInUp}
+              transition={{ delay: 0.5 }}
+            >
+              <Card className="bg-slate-800/40 border border-slate-600/50 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center">
+                    <Activity className="h-5 w-5 mr-2 text-blue-400" />
+                    Recent Activity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 bg-slate-700/40 rounded-lg">
+                      <div className="w-2 h-2 rounded-full bg-blue-400"></div>
+                      <div className="flex-1">
+                        <p className="text-white text-sm">Account created</p>
+                        <p className="text-slate-500 text-xs">Just now</p>
+                      </div>
+                    </div>
+                    
+                    {getCurrentPlan() !== 'Free' && (
+                      <div className="flex items-center space-x-3 p-3 bg-slate-700/40 rounded-lg">
+                        <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                        <div className="flex-1">
+                          <p className="text-white text-sm">Subscription activated</p>
+                          <p className="text-slate-500 text-xs">Today</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 };

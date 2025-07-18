@@ -1,5 +1,6 @@
 from typing import List
-from pydantic import BaseSettings, validator
+from pydantic_settings import BaseSettings
+from pydantic import validator
 
 
 class Settings(BaseSettings):
@@ -18,12 +19,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     
     # App Settings
-    SECRET_KEY: str
+    SECRET_KEY: str  # <-- Make sure this is set in your .env
     DEBUG: bool = False
     ENVIRONMENT: str = "production"
     
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000"
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000"]
     
     @validator("ALLOWED_ORIGINS", pre=True)
     def parse_cors_origins(cls, v):
@@ -49,6 +50,18 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()
+
+# Database connection pooling configuration
+DATABASE_POOL_SIZE = 20
+DATABASE_MAX_OVERFLOW = 30
+DATABASE_POOL_TIMEOUT = 30
+DATABASE_POOL_RECYCLE = 3600
+
+
+# Stripe API caching configuration
+STRIPE_CACHE_TTL = 300  # 5 minutes
+STRIPE_CACHE_ENABLED = True

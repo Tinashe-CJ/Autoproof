@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle, ArrowRight, Loader2 } from 'lucide-react';
 import { getUserSubscription } from '@/lib/supabase';
 import { getProductByPriceId } from '@/stripe-config';
 
@@ -43,63 +43,92 @@ const SuccessPage = () => {
     if (!subscription?.price_id) return null;
     
     const product = getProductByPriceId(subscription.price_id);
-    return product ? `$${product.price}/month` : null;
+    return product ? `$${product.price.toFixed(2)}/month` : null;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+      <div className="absolute h-full w-full bg-gradient-to-b from-slate-900/30 to-slate-900/0" />
+      
+      <Card className="w-full max-w-md relative z-10 bg-white/10 backdrop-blur-md border border-white/20">
         <CardHeader className="text-center">
-          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-            <CheckCircle className="h-6 w-6 text-green-600" />
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gradient-to-r from-green-400 to-green-600 mb-6 shadow-lg shadow-green-500/25">
+            <CheckCircle className="h-8 w-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-green-600">
+          <CardTitle className="text-3xl font-bold text-white mb-2">
             Payment Successful!
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-slate-300 text-lg">
             Thank you for subscribing to AutoProof
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           {loading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Processing your subscription...</p>
+            <div className="text-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-400" />
+              <p className="text-slate-300 text-lg">Processing your subscription...</p>
+              <p className="text-slate-400 text-sm mt-2">This may take a few moments</p>
             </div>
           ) : (
-            <div className="text-center space-y-2">
-              <h3 className="font-semibold">Welcome to {getPlanName()}!</h3>
-              {getPlanPrice() && (
-                <p className="text-sm text-muted-foreground">{getPlanPrice()}</p>
-              )}
-              <p className="text-sm text-muted-foreground">
-                Your subscription is now active and you have access to all features in your plan.
-              </p>
-              {sessionId && (
-                <p className="text-xs text-muted-foreground">
-                  Session ID: {sessionId}
+            <div className="text-center space-y-4">
+              <div className="bg-gradient-to-r from-blue-500/20 to-violet-500/20 border border-blue-500/30 rounded-lg p-6">
+                <h3 className="font-bold text-2xl text-white mb-2">Welcome to {getPlanName()}!</h3>
+                {getPlanPrice() && (
+                  <p className="text-blue-300 text-lg font-medium">{getPlanPrice()}</p>
+                )}
+                <p className="text-slate-300 mt-3">
+                  Your subscription is now active. You can start monitoring your compliance immediately.
                 </p>
+              </div>
+              
+              {sessionId && (
+                <div className="bg-white/5 border border-white/10 rounded-lg p-4">
+                  <p className="text-xs text-slate-400">
+                    Session ID: <span className="font-mono">{sessionId}</span>
+                  </p>
+                </div>
               )}
             </div>
           )}
           
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">What's next?</h4>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Access your dashboard to get started</li>
-              <li>• Connect your Slack and GitHub integrations</li>
-              <li>• Configure your compliance policies</li>
-              <li>• Start monitoring for violations</li>
+          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+            <h4 className="font-semibold text-white text-lg mb-4">What's next?</h4>
+            <ul className="text-slate-300 space-y-3">
+              <li className="flex items-start">
+                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 mr-3 flex-shrink-0"></div>
+                Access your dashboard to configure settings
+              </li>
+              <li className="flex items-start">
+                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 mr-3 flex-shrink-0"></div>
+                Connect your Slack and GitHub integrations
+              </li>
+              <li className="flex items-start">
+                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 mr-3 flex-shrink-0"></div>
+                Set up your compliance monitoring rules
+              </li>
+              <li className="flex items-start">
+                <div className="w-2 h-2 rounded-full bg-blue-400 mt-2 mr-3 flex-shrink-0"></div>
+                Begin automated compliance scanning
+              </li>
             </ul>
           </div>
           
-          <div className="flex flex-col space-y-2 pt-4">
-            <Button onClick={() => navigate('/dashboard')} className="w-full">
+          <div className="flex flex-col space-y-3 pt-4">
+            <Button 
+              onClick={() => navigate('/dashboard')} 
+              className="w-full bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white font-medium py-6 text-lg"
+            >
               Go to Dashboard
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button variant="outline" onClick={() => navigate('/')} className="w-full">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/')} 
+              className="w-full border-white/20 text-white hover:bg-white/10 py-6"
+            >
               Back to Home
             </Button>
           </div>

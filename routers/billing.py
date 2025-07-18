@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import QueuePool
 from config.database import get_db
 from config.settings import settings
 from auth import get_current_user
@@ -9,8 +10,11 @@ from models.team import Team, PlanType
 from models.billing import BillingInfo
 from services.stripe_service import StripeService
 from services.usage_service import UsageService
+from typing import Optional
+from datetime import datetime
 import stripe
 import json
+import httpx
 
 router = APIRouter()
 
@@ -18,18 +22,21 @@ router = APIRouter()
 class PlanUpgradeRequest(BaseModel):
     plan: PlanType
 
-
 class BillingResponse(BaseModel):
     customer_id: str
     subscription_id: str
     current_plan: PlanType
     status: str
-    trial_end: str = None
+    trial_end: Optional[str] = None
     current_period_end: str
     overage_amount: float = 0.0
 
 
-@router.get("/billing", response_model=BillingResponse)
+class CheckoutSessionRequest(BaseModel):
+    plan: PlanType
+
+
+@router.get("/", response_model=BillingResponse)
 async def get_billing_info(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -60,6 +67,17 @@ async def get_billing_info(
         db.add(billing_info)
         db.commit()
         db.refresh(billing_info)
+    else:
+        # Update customer info if it exists but might be outdated
+        stripe_service = StripeService()
+        try:
+            await stripe_service.update_customer(
+                billing_info.stripe_customer_id,
+                email=current_user.email,
+                name=f"{current_user.first_name} {current_user.last_name}"
+            )
+        except Exception as e:
+            print(f"Warning: Could not update Stripe customer: {e}")
     
     # Calculate current overage
     usage_service = UsageService()
@@ -76,7 +94,7 @@ async def get_billing_info(
     )
 
 
-@router.post("/billing/upgrade")
+@router.post("/upgrade")
 async def upgrade_plan(
     upgrade_request: PlanUpgradeRequest,
     current_user: User = Depends(get_current_user),
@@ -110,9 +128,9 @@ async def upgrade_plan(
         # Update team plan
         team.plan = upgrade_request.plan
         
-        # Update billing info
-        billing_info.current_period_start = result["current_period_start"]
-        billing_info.current_period_end = result["current_period_end"]
+        # Update billing info - convert Unix timestamps to datetime
+        billing_info.current_period_start = datetime.fromtimestamp(result["current_period_start"])
+        billing_info.current_period_end = datetime.fromtimestamp(result["current_period_end"])
         
         db.commit()
         
@@ -125,7 +143,7 @@ async def upgrade_plan(
         )
 
 
-@router.post("/billing/portal")
+@router.post("/portal")
 async def create_billing_portal(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -153,6 +171,130 @@ async def create_billing_portal(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to create billing portal: {str(e)}"
         )
+
+
+@router.post("/start-trial")
+async def start_free_trial(
+    request: Request,
+    checkout_request: CheckoutSessionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Start a free trial or subscription by calling the Supabase stripe-checkout Edge Function."""
+    user_id = current_user.id
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Get team and billing info
+    team = db.query(Team).filter(Team.id == user.team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team.id).first()
+    if not billing_info:
+        # Create billing info if it doesn't exist
+        stripe_service = StripeService()
+        customer_id = await stripe_service.create_customer(
+            email=user.email,
+            name=f"{user.first_name} {user.last_name}",
+            team_id=team.id
+        )
+        
+        billing_info = BillingInfo(
+            id=str(__import__('uuid').uuid4()),
+            team_id=team.id,
+            stripe_customer_id=customer_id,
+            is_active=True
+        )
+        db.add(billing_info)
+        db.commit()
+        db.refresh(billing_info)
+
+    # Prepare data for the Edge Function
+    price_id = StripeService().PLAN_CONFIGS[checkout_request.plan]["price_id"]
+    success_url = "https://yourdomain.com/billing/success"  # Update to your frontend
+    cancel_url = "https://yourdomain.com/billing/cancel"    # Update to your frontend
+    edge_url = "https://jwwdunhhmbqqfbotnzvm.functions.supabase.co/stripe-checkout"  # Your project ref
+
+    payload = {
+        "price_id": price_id,
+        "customer_id": billing_info.stripe_customer_id,
+        "success_url": success_url,
+        "cancel_url": cancel_url,
+        "user_id": user_id
+    }
+
+    async with httpx.AsyncClient() as client:
+        edge_response = await client.post(edge_url, json=payload)
+        if edge_response.status_code != 200:
+            raise HTTPException(status_code=502, detail=f"Stripe checkout failed: {edge_response.text}")
+        data = edge_response.json()
+        checkout_url = data.get("url")
+        if not checkout_url:
+            raise HTTPException(status_code=502, detail="No checkout URL returned from Stripe.")
+
+    return {"checkout_url": checkout_url}
+
+
+@router.post("/checkout-session-direct")
+async def create_checkout_session_direct(
+    checkout_request: CheckoutSessionRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a Stripe Checkout session directly from the backend and return the session URL."""
+    import time
+    start_time = time.time()
+    user_id = current_user.id
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Get team and billing info
+    team = db.query(Team).filter(Team.id == user.team_id).first()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    
+    billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team.id).first()
+    if not billing_info:
+        # Create billing info if it doesn't exist
+        stripe_service = StripeService()
+        customer_id = await stripe_service.create_customer(
+            email=user.email,
+            name=f"{user.first_name} {user.last_name}",
+            team_id=team.id
+        )
+        
+        billing_info = BillingInfo(
+            id=str(__import__('uuid').uuid4()),
+            team_id=team.id,
+            stripe_customer_id=customer_id,
+            is_active=True
+        )
+        db.add(billing_info)
+        db.commit()
+        db.refresh(billing_info)
+
+    # Prepare data for Stripe Checkout
+    price_id = StripeService().PLAN_CONFIGS[checkout_request.plan]["price_id"]
+    success_url = "https://yourdomain.com/billing/success"  # Update to your frontend
+    cancel_url = "https://yourdomain.com/billing/cancel"    # Update to your frontend
+
+    try:
+        session = stripe.checkout.Session.create(
+            customer=billing_info.stripe_customer_id,
+            payment_method_types=["card"],
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode="subscription",
+            success_url=success_url,
+            cancel_url=cancel_url,
+        )
+        duration = time.time() - start_time
+        print(f"Checkout session created in {duration:.2f}s")
+        return {"checkout_url": session.url}
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Stripe checkout failed: {str(e)}")
 
 
 @router.post("/stripe/webhook")

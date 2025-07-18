@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr
 from supabase import Client
 from app.core.supabase import get_supabase
 from app.models.user import UserResponse
+from app.core.auth import get_current_user
 
 router = APIRouter()
 security = HTTPBearer()

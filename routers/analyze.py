@@ -3,11 +3,16 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from config.database import get_db
-from auth import verify_api_key
+from auth import verify_api_key, get_current_user
 from services.openai_service import ComplianceAnalyzer
 from services.usage_service import UsageService
+from models.user import User as SAUser
+from models.team import Team as SATeam
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 router = APIRouter()
+
+security = HTTPBearer()
 
 
 class AnalyzeRequest(BaseModel):
@@ -33,14 +38,52 @@ class BatchAnalyzeRequest(BaseModel):
 async def analyze_content(
     request: Request,
     analyze_request: AnalyzeRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """
     Analyze content for compliance violations using AI
-    Requires API key authentication
+    Supports API key or Clerk JWT authentication
     """
-    # Verify API key and get user/team
-    user, team = await verify_api_key(request, db)
+    user = None
+    team = None
+    # Prefer API key if present
+    api_key = request.headers.get("X-API-Key")
+    if api_key:
+        user, team = await verify_api_key(request, db)
+    else:
+        # Use Clerk JWT
+        from app.core.auth import get_current_user as get_clerk_user
+        current_user = await get_clerk_user(credentials)
+        # Extract Clerk claims
+        clerk_user_id = current_user.get("sub")
+        email = current_user.get("email")
+        org_id = current_user.get("org_id")
+        org_name = current_user.get("org_name", "Team")
+        first_name = current_user.get("first_name", "")
+        last_name = current_user.get("last_name", "")
+        # Look up or create team
+        team = db.query(SATeam).filter(SATeam.id == org_id).first()
+        if not team:
+            team = SATeam(id=org_id, name=org_name)
+            db.add(team)
+            db.commit()
+            db.refresh(team)
+        # Look up or create user
+        user = db.query(SAUser).filter(SAUser.id == clerk_user_id).first()
+        if not user:
+            user = SAUser(
+                id=clerk_user_id,
+                clerk_id=clerk_user_id,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                team_id=org_id,
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
     
     # Check usage limits
     usage_service = UsageService()

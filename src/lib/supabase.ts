@@ -3,8 +3,12 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Missing Supabase environment variables - some features may not work')
+if (!supabaseUrl || !supabaseAnonKey || supabaseAnonKey.includes('your-supabase-anon-key') || supabaseAnonKey.includes('REPLACE_WITH_YOUR_ACTUAL_ANON_KEY')) {
+  console.error('Missing or invalid Supabase environment variables')
+  console.error('Please update your .env file with:')
+  console.error('- VITE_SUPABASE_URL: Your Supabase project URL')
+  console.error('- VITE_SUPABASE_ANON_KEY: Your Supabase anonymous/public key')
+  console.error('Find these values in your Supabase project dashboard under Settings -> API')
 }
 
 export const supabase = createClient(
@@ -51,31 +55,31 @@ export const getUserOrders = async () => {
 // Stripe checkout function
 export const createCheckoutSession = async (priceId: string, mode: 'subscription' | 'payment' = 'subscription', accessToken?: string) => {
   // Check if Supabase is properly configured
-  if (!supabaseUrl || supabaseUrl === 'https://placeholder.supabase.co' || !supabaseAnonKey || supabaseAnonKey === 'placeholder-key') {
-    throw new Error('Supabase not configured. Please click "Connect to Supabase" in the top right corner to set up your database connection.')
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase not configured. Please click "Connect to Supabase" in the top right corner to set up billing.')
   }
 
-  let token = accessToken;
-  
-  // If no access token provided, try to get from Supabase as fallback
-  if (!token) {
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      throw new Error('Authentication required. Please sign in to continue with checkout.')
-    }
-    token = session.access_token
+  // Validate the Supabase URL format
+  if (supabaseUrl.includes('placeholder') || !supabaseUrl.includes('supabase.co') || supabaseUrl === 'https://placeholder.supabase.co') {
+    throw new Error('Invalid Supabase configuration. Please connect to Supabase to enable billing.')
+  }
+
+  // Use the provided access token (should be Clerk JWT)
+  if (!accessToken) {
+    throw new Error('Authentication required. Please sign out and sign back in to continue.')
   }
 
   try {
-    console.log('Making request to stripe-checkout function');
-    console.log('Price ID:', priceId);
-    console.log('Mode:', mode);
+    console.log('Creating checkout session for price:', priceId);
     
-    const response = await fetch(`${supabaseUrl}/functions/v1/stripe-checkout`, {
+    const functionUrl = `${supabaseUrl}/functions/v1/stripe-customer-checkout`;
+    
+    const response = await fetch(functionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json'
       },
       body: JSON.stringify({
         price_id: priceId,
@@ -85,30 +89,40 @@ export const createCheckoutSession = async (priceId: string, mode: 'subscription
       })
     })
 
-    console.log('Response status:', response.status);
+    const responseText = await response.text();
     
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      console.error('Error response:', errorData);
+      let errorData;
+      try {
+        errorData = JSON.parse(responseText);
+      } catch {
+        errorData = { error: responseText || `HTTP ${response.status}` };
+      }
       
       if (response.status === 404) {
-        throw new Error('Stripe checkout function not found. Please ensure your Supabase project has the stripe-checkout edge function deployed.')
+        throw new Error('Billing system not available. Please try again later or contact support.')
       }
       
       if (response.status === 401) {
-        throw new Error('Authentication failed. Please sign out and sign back in.')
+        throw new Error('Authentication expired. Please sign out and sign back in.')
       }
       
-      throw new Error(errorData.error || `Checkout failed with status ${response.status}. Please try again or contact support.`)
+      throw new Error(errorData.error || 'Checkout failed. Please try again or contact support.')
     }
 
-    const result = await response.json();
-    console.log('Checkout session created:', result);
+    let result;
+    try {
+      result = JSON.parse(responseText);
+    } catch {
+      throw new Error('Invalid response from billing system. Please try again.');
+    }
+    
+    console.log('Checkout session created successfully');
     return result;
   } catch (error) {
-    console.error('Checkout session error:', error);
+    console.error('Checkout error:', error);
     if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new Error('Network error. Please check your internet connection and try again.')
+      throw new Error('Network error. Please check your connection and try again.')
     }
     throw error
   }

@@ -1,12 +1,14 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import Stripe from 'npm:stripe@17.7.0';
 import { createClient } from 'npm:@supabase/supabase-js@2.49.1';
+import { jwtVerify, createRemoteJWKSet } from 'npm:jose@5.2.0';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY')!;
+const clerkSecretKey = Deno.env.get('CLERK_SECRET_KEY')!;
 
-if (!supabaseUrl || !supabaseServiceKey || !stripeSecret) {
+if (!supabaseUrl || !supabaseServiceKey || !stripeSecret || !clerkSecretKey) {
   console.error('Missing required environment variables');
 }
 
@@ -17,6 +19,10 @@ const stripe = new Stripe(stripeSecret, {
     version: '1.0.0',
   },
 });
+
+// Extract the publishable key from the secret key to construct JWKS URL
+const publishableKey = clerkSecretKey.replace('sk_test_', 'pk_test_').split('.')[0] + '.' + clerkSecretKey.split('.')[1];
+const JWKS = createRemoteJWKSet(new URL(`https://${publishableKey.split('_')[2]}.clerk.accounts.dev/.well-known/jwks.json`));
 
 // Helper function to create responses with CORS headers
 function corsResponse(body: string | object | null, status = 200) {
@@ -38,6 +44,44 @@ function corsResponse(body: string | object | null, status = 200) {
       'Content-Type': 'application/json',
     },
   });
+}
+
+async function verifyClerkJWT(token: string) {
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    return {
+      userId: payload.sub as string,
+      email: payload.email as string,
+    };
+  } catch (error) {
+    console.error('JWT verification failed:', error);
+    throw new Error('Invalid JWT token');
+  }
+}
+
+type ExpectedType = 'string' | { values: string[] };
+type Expectations<T> = { [K in keyof T]: ExpectedType };
+
+function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
+  for (const parameter in values) {
+    const expectation = expected[parameter];
+    const value = values[parameter];
+
+    if (expectation === 'string') {
+      if (value == null) {
+        return `Missing required parameter ${parameter}`;
+      }
+      if (typeof value !== 'string') {
+        return `Expected parameter ${parameter} to be a string got ${JSON.stringify(value)}`;
+      }
+    } else {
+      if (!expectation.values.includes(value)) {
+        return `Expected parameter ${parameter} to be one of ${expectation.values.join(', ')}`;
+      }
+    }
+  }
+
+  return undefined;
 }
 
 Deno.serve(async (req) => {
@@ -77,33 +121,31 @@ Deno.serve(async (req) => {
     }
     
     const token = authHeader.replace('Bearer ', '');
-    const {
-      data: { user },
-      error: getUserError,
-    } = await supabase.auth.getUser(token);
-
-    if (getUserError) {
-      console.error('Get user error:', getUserError);
+    
+    // Verify Clerk JWT
+    let user;
+    try {
+      user = await verifyClerkJWT(token);
+      console.log('User authenticated:', user.userId);
+    } catch (jwtError) {
+      console.error('JWT verification error:', jwtError);
       return corsResponse({ error: 'Failed to authenticate user' }, 401);
     }
 
-    if (!user) {
-      console.error('No user found');
+    if (!user || !user.userId) {
+      console.error('No user found in JWT');
       return corsResponse({ error: 'User not found' }, 404);
     }
-
-    console.log('User authenticated:', user.id);
 
     const { data: customer, error: getCustomerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
-      .eq('user_id', user.id)
+      .eq('user_id', user.userId)
       .is('deleted_at', null)
       .maybeSingle();
 
     if (getCustomerError) {
       console.error('Failed to fetch customer information from the database', getCustomerError);
-
       return corsResponse({ error: 'Failed to fetch customer information' }, 500);
     }
 
@@ -117,14 +159,14 @@ Deno.serve(async (req) => {
       const newCustomer = await stripe.customers.create({
         email: user.email,
         metadata: {
-          userId: user.id,
+          userId: user.userId,
         },
       });
 
-      console.log(`Created new Stripe customer ${newCustomer.id} for user ${user.id}`);
+      console.log(`Created new Stripe customer ${newCustomer.id} for user ${user.userId}`);
 
       const { error: createCustomerError } = await supabase.from('stripe_customers').insert({
-        user_id: user.id,
+        user_id: user.userId,
         customer_id: newCustomer.id,
       });
 
@@ -179,7 +221,6 @@ Deno.serve(async (req) => {
 
         if (getSubscriptionError) {
           console.error('Failed to fetch subscription information from the database', getSubscriptionError);
-
           return corsResponse({ error: 'Failed to fetch subscription information' }, 500);
         }
 
@@ -192,7 +233,6 @@ Deno.serve(async (req) => {
 
           if (createSubscriptionError) {
             console.error('Failed to create subscription record for existing customer', createSubscriptionError);
-
             return corsResponse({ error: 'Failed to create subscription record for existing customer' }, 500);
           }
         }
@@ -224,28 +264,3 @@ Deno.serve(async (req) => {
     return corsResponse({ error: error.message }, 500);
   }
 });
-
-type ExpectedType = 'string' | { values: string[] };
-type Expectations<T> = { [K in keyof T]: ExpectedType };
-
-function validateParameters<T extends Record<string, any>>(values: T, expected: Expectations<T>): string | undefined {
-  for (const parameter in values) {
-    const expectation = expected[parameter];
-    const value = values[parameter];
-
-    if (expectation === 'string') {
-      if (value == null) {
-        return `Missing required parameter ${parameter}`;
-      }
-      if (typeof value !== 'string') {
-        return `Expected parameter ${parameter} to be a string got ${JSON.stringify(value)}`;
-      }
-    } else {
-      if (!expectation.values.includes(value)) {
-        return `Expected parameter ${parameter} to be one of ${expectation.values.join(', ')}`;
-      }
-    }
-  }
-
-  return undefined;
-}

@@ -43,6 +43,18 @@ class StripeService:
         except stripe.error.StripeError as e:
             raise Exception(f"Failed to create Stripe customer: {str(e)}")
     
+    async def update_customer(self, customer_id: str, email: str, name: str) -> bool:
+        """Update an existing Stripe customer"""
+        try:
+            stripe.Customer.modify(
+                customer_id,
+                email=email,
+                name=name
+            )
+            return True
+        except stripe.error.StripeError as e:
+            raise Exception(f"Failed to update Stripe customer: {str(e)}")
+    
     async def create_subscription(
         self, 
         customer_id: str, 

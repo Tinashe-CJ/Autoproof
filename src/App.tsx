@@ -8,6 +8,8 @@ import CustomUserProfile from "./components/auth/CustomUserProfile";
 import Dashboard from "./components/dashboard/Dashboard";
 import SuccessPage from "./components/success/SuccessPage";
 import PricingPage from "./components/pricing/PricingPage";
+import { BillingManager } from "./components/billing";
+import AuthDebugger from "./components/auth/AuthDebugger";
 import { Toaster } from "@/components/ui/toaster";
 import routes from "tempo-routes";
 
@@ -27,6 +29,22 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/billing" 
+            element={
+              <ProtectedRoute>
+                <BillingManager />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/debug" 
+            element={
+              <ProtectedRoute>
+                <AuthDebugger />
               </ProtectedRoute>
             } 
           />
