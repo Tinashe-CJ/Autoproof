@@ -7,12 +7,20 @@ from enum import Enum
 import hashlib
 import json
 import re
+import time
 
 from backend.app.core.supabase import get_supabase
 from backend.app.core.auth import (
     get_current_user_with_role,
     require_read,
     log_auth_event
+)
+from backend.app.services.openai_service import (
+    analyze_text,
+    log_analysis_event,
+    OpenAIError,
+    RateLimitError,
+    TokenLimitError
 )
 
 router = APIRouter()
@@ -99,31 +107,43 @@ async def analyze_content(
     supabase = Depends(get_supabase)
 ):
     """
-    Analyze content against policy rules and detect violations
+    Analyze content against policy rules and detect violations using OpenAI
     """
-    import time
     start_time = time.time()
     
     try:
-        # Get active policy rules for the team
-        policy_rules_result = supabase.table("policy_rules").select("*").eq("team_id", current_user["team_id"]).eq("is_active", True).execute()
+        # Use OpenAI for analysis
+        openai_violations, token_usage = await analyze_text(
+            analysis_request.content,
+            analysis_request.source.value,
+            "compliance",
+            use_cache=True
+        )
         
-        if not policy_rules_result.data:
-            return AnalysisResponse(
-                violations=[],
-                total_violations=0,
-                analysis_summary={"message": "No active policy rules found"},
-                processing_time_ms=int((time.time() - start_time) * 1000)
-            )
-
+        # Convert OpenAI violations to DetectedViolation format
         violations = []
-        content_lower = analysis_request.content.lower()
-        lines = analysis_request.content.split('\n')
-        
-        # Analyze content against each policy rule
-        for rule in policy_rules_result.data:
-            rule_violations = analyze_rule_against_content(rule, content_lower, lines, analysis_request)
-            violations.extend(rule_violations)
+        for openai_violation in openai_violations:
+            # Map OpenAI violation to DetectedViolation
+            severity_map = {
+                "low": ViolationSeverity.LOW,
+                "medium": ViolationSeverity.MEDIUM,
+                "high": ViolationSeverity.HIGH,
+                "critical": ViolationSeverity.CRITICAL
+            }
+            
+            violation = DetectedViolation(
+                policy_rule_id=None,  # OpenAI doesn't provide rule IDs
+                policy_rule_name=openai_violation.get("type", "AI Detected"),
+                violation_type=ViolationType.COMPLIANCE_ISSUE,
+                severity=severity_map.get(openai_violation.get("severity", "medium").lower(), ViolationSeverity.MEDIUM),
+                title=f"AI Detected: {openai_violation.get('type', 'Compliance Issue')}",
+                description=openai_violation.get("issue", ""),
+                matched_content=analysis_request.content[:200] + "..." if len(analysis_request.content) > 200 else analysis_request.content,
+                confidence_score=0.8,  # Default confidence for AI detection
+                line_number=None,
+                character_range=None
+            )
+            violations.append(violation)
 
         # Create violation records in database
         created_violations = []
@@ -145,7 +165,9 @@ async def analyze_content(
                     "confidence_score": violation.confidence_score,
                     "line_number": violation.line_number,
                     "character_range": violation.character_range,
-                    "analysis_metadata": analysis_request.metadata
+                    "analysis_metadata": analysis_request.metadata,
+                    "ai_analysis": True,
+                    "token_usage": token_usage
                 },
                 "created_by": current_user["id"],
                 "created_at": datetime.now().isoformat()
@@ -168,11 +190,21 @@ async def analyze_content(
                 "source": analysis_request.source.value,
                 "content_length": len(analysis_request.content),
                 "violations_detected": len(violations),
-                "policy_rules_checked": len(policy_rules_result.data)
+                "ai_analysis": True,
+                "token_usage": token_usage
             }
         )
 
+        # Log OpenAI analysis event
         processing_time_ms = int((time.time() - start_time) * 1000)
+        log_analysis_event(
+            source=analysis_request.source.value,
+            text_length=len(analysis_request.content),
+            violations_count=len(violations),
+            token_usage=token_usage,
+            model_used="gpt-4o-mini",
+            processing_time_ms=processing_time_ms
+        )
         
         return AnalysisResponse(
             violations=violations,
@@ -180,12 +212,28 @@ async def analyze_content(
             analysis_summary={
                 "source": analysis_request.source.value,
                 "content_length": len(analysis_request.content),
-                "policy_rules_checked": len(policy_rules_result.data),
+                "ai_analysis": True,
+                "token_usage": token_usage,
                 "violations_by_severity": count_violations_by_severity(violations)
             },
             processing_time_ms=processing_time_ms
         )
 
+    except RateLimitError as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded: {str(e)}"
+        )
+    except TokenLimitError as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Content too long for analysis: {str(e)}"
+        )
+    except OpenAIError as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"AI analysis service unavailable: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -516,4 +564,108 @@ async def update_violation(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update violation: {str(e)}"
+        )
+
+# Policy Document Parsing Models
+class PolicyDocumentRequest(BaseModel):
+    document_text: str = Field(..., min_length=1, max_length=50000)
+    document_name: Optional[str] = None
+    document_type: Optional[str] = None
+
+class PolicyRule(BaseModel):
+    name: str
+    description: str
+    keywords: List[str] = []
+    severity: str = "medium"
+    conditions: List[Dict[str, Any]] = []
+
+class PolicyDocumentResponse(BaseModel):
+    rules: List[PolicyRule]
+    metadata: Dict[str, Any]
+    confidence: float
+    token_usage: int
+    processing_time_ms: int
+
+@router.post("/parse-policy", response_model=PolicyDocumentResponse)
+async def parse_policy_document_endpoint(
+    request: Request,
+    policy_request: PolicyDocumentRequest,
+    current_user: dict = Depends(require_read),
+    supabase = Depends(get_supabase)
+):
+    """
+    Parse a policy document to extract structured rules using OpenAI
+    """
+    start_time = time.time()
+    
+    try:
+        # Use OpenAI for policy document parsing
+        from backend.app.services.openai_service import parse_policy_document
+        
+        result = await parse_policy_document(policy_request.document_text)
+        
+        # Convert parsed rules to PolicyRule format
+        rules = []
+        for rule_data in result.get("rules", []):
+            rule = PolicyRule(
+                name=rule_data.get("name", "Unnamed Rule"),
+                description=rule_data.get("description", ""),
+                keywords=rule_data.get("keywords", []),
+                severity=rule_data.get("severity", "medium"),
+                conditions=rule_data.get("conditions", [])
+            )
+            rules.append(rule)
+        
+        # Log policy parsing event
+        await log_auth_event(
+            supabase,
+            current_user["id"],
+            current_user["team_id"],
+            "policy_document_parsed",
+            request.client.host if request.client else None,
+            request.headers.get("user-agent"),
+            {
+                "document_name": policy_request.document_name,
+                "document_type": policy_request.document_type,
+                "document_length": len(policy_request.document_text),
+                "rules_extracted": len(rules),
+                "confidence": result.get("confidence", 0.0),
+                "token_usage": result.get("token_usage", 0)
+            }
+        )
+        
+        processing_time_ms = int((time.time() - start_time) * 1000)
+        
+        return PolicyDocumentResponse(
+            rules=rules,
+            metadata={
+                "document_name": policy_request.document_name,
+                "document_type": policy_request.document_type,
+                "document_length": len(policy_request.document_text),
+                "parsing_confidence": result.get("confidence", 0.0)
+            },
+            confidence=result.get("confidence", 0.0),
+            token_usage=result.get("token_usage", 0),
+            processing_time_ms=processing_time_ms
+        )
+        
+    except RateLimitError as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Rate limit exceeded: {str(e)}"
+        )
+    except TokenLimitError as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Document too long for parsing: {str(e)}"
+        )
+    except OpenAIError as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"AI parsing service unavailable: {str(e)}"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to parse policy document: {str(e)}"
         ) 

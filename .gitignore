@@ -327,6 +327,11 @@ test_checkout_speed.py
 performance_test.py
 optimize_checkout.py
 
+# OpenAI integration test files
+test_openai_integration.py
+test_api_endpoints.py
+test_api_usage_example.py
+
 # Additional patterns for future files
 *.secret
 *.private

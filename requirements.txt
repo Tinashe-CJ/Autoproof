@@ -18,7 +18,7 @@ supabase==1.0.3
 email-validator
 python-jose
 # Session pooling and connection management
-sqlalchemy[pooling]
+# sqlalchemy[pooling] - removed as it's not a valid extra
 # Additional testing dependencies
 pytest-cov
 pytest-mock
