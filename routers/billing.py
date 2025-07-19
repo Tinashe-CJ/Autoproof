@@ -239,6 +239,7 @@ async def start_free_trial(
 
 @router.post("/checkout-session-direct")
 async def create_checkout_session_direct(
+    request: Request,
     checkout_request: CheckoutSessionRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -278,8 +279,11 @@ async def create_checkout_session_direct(
 
     # Prepare data for Stripe Checkout
     price_id = StripeService().PLAN_CONFIGS[checkout_request.plan]["price_id"]
-    success_url = "https://yourdomain.com/billing/success"  # Update to your frontend
-    cancel_url = "https://yourdomain.com/billing/cancel"    # Update to your frontend
+    
+    # Get the request origin for dynamic URLs
+    request_origin = request.headers.get("origin", "http://localhost:3000")
+    success_url = f"{request_origin}/success"
+    cancel_url = f"{request_origin}/pricing"
 
     try:
         session = stripe.checkout.Session.create(
@@ -289,6 +293,7 @@ async def create_checkout_session_direct(
             mode="subscription",
             success_url=success_url,
             cancel_url=cancel_url,
+            metadata={"plan": checkout_request.plan.value, "team_id": str(team.id)},
         )
         duration = time.time() - start_time
         print(f"Checkout session created in {duration:.2f}s")
@@ -317,7 +322,11 @@ async def stripe_webhook(
         raise HTTPException(status_code=400, detail="Invalid signature")
     
     # Handle the event
-    if event["type"] == "customer.subscription.updated":
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        await handle_checkout_session_completed(db, session)
+    
+    elif event["type"] == "customer.subscription.updated":
         subscription = event["data"]["object"]
         await handle_subscription_updated(db, subscription)
     
@@ -334,6 +343,43 @@ async def stripe_webhook(
         await handle_payment_failed(db, invoice)
     
     return {"status": "success"}
+
+
+async def handle_checkout_session_completed(db: Session, session: dict):
+    """Handle checkout session completion webhook"""
+    customer_id = session["customer"]
+    metadata = session.get("metadata", {})
+    plan_value = metadata.get("plan")
+    team_id = metadata.get("team_id")
+    
+    if not plan_value or not team_id:
+        print(f"Missing metadata in checkout session: {session}")
+        return
+    
+    try:
+        plan = PlanType(plan_value)
+    except ValueError:
+        print(f"Invalid plan value in checkout session: {plan_value}")
+        return
+    
+    # Update team plan
+    team = db.query(Team).filter(Team.id == team_id).first()
+    if team:
+        team.plan = plan
+        print(f"Updated team {team_id} plan to {plan.value}")
+    
+    # Update billing info
+    billing_info = db.query(BillingInfo).filter(
+        BillingInfo.stripe_customer_id == customer_id
+    ).first()
+    
+    if billing_info:
+        billing_info.is_active = True
+        if session.get("subscription"):
+            billing_info.stripe_subscription_id = session["subscription"]
+        print(f"Updated billing info for customer {customer_id}")
+    
+    db.commit()
 
 
 async def handle_subscription_updated(db: Session, subscription: dict):

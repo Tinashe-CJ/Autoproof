@@ -76,9 +76,9 @@ async def get_current_user(
         user_data = {
             "id": str(uuid.uuid4()),
             "clerk_id": clerk_user_id,
-            "email": token_data.get("email", ""),
-            "first_name": token_data.get("given_name", ""),
-            "last_name": token_data.get("family_name", ""),
+            "email": token_data.get("email", f"user_{clerk_user_id}@example.com"),
+            "first_name": token_data.get("given_name", "User"),
+            "last_name": token_data.get("family_name", "Name"),
         }
         
         # Create default team for new user

@@ -17,3 +17,24 @@ PyJWT>=2.0.0,<3.0.0
 supabase==1.0.3
 email-validator
 python-jose
+# Session pooling and connection management
+sqlalchemy[pooling]
+# Additional testing dependencies
+pytest-cov
+pytest-mock
+# Development dependencies
+black
+flake8
+mypy
+# Database utilities
+# psycopg2-binary (already included above)
+# Environment management  
+# python-dotenv (already included above)
+# HTTP client for API calls
+requests
+# JSON handling
+orjson
+# Date/time handling
+python-dateutil
+# Logging
+structlog

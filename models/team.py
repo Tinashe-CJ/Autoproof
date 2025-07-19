@@ -6,6 +6,14 @@ import enum
 from typing import List, Optional, TYPE_CHECKING
 from datetime import datetime
 
+if TYPE_CHECKING:
+    from models.user import User
+    from models.api_key import APIKey
+    from models.usage_log import UsageLog
+    from models.policy_rule import PolicyRule
+    from models.violation_log import ViolationLog
+    from models.billing import BillingInfo
+
 
 class PlanType(enum.Enum):
     STARTER = "starter"
@@ -34,4 +42,6 @@ class Team(Base):
     users: Mapped[List['User']] = relationship("User", back_populates="team")
     api_keys: Mapped[List['APIKey']] = relationship("APIKey", back_populates="team")
     usage_logs: Mapped[List['UsageLog']] = relationship("UsageLog", back_populates="team")
+    policy_rules: Mapped[List['PolicyRule']] = relationship("PolicyRule", back_populates="team")
+    violation_logs: Mapped[List['ViolationLog']] = relationship("ViolationLog", back_populates="team")
     billing_info: Mapped[Optional['BillingInfo']] = relationship("BillingInfo", back_populates="team", uselist=False)
