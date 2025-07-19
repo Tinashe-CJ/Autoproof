@@ -1,7 +1,7 @@
 from typing import List, Union, Optional
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings
-from supabase import create_client, Client
+from supabase.client import create_client, Client
 
 
 class Settings(BaseSettings):
@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
+
+    # OpenAI Configuration
+    OPENAI_API_KEY: str
     
     # CORS Configuration
     BACKEND_CORS_ORIGINS: List[str] = [

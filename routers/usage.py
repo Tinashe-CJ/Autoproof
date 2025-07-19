@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from config.database import get_db
 from auth import get_current_user
-from models.user import User as SAUser
+from models.user import User
 from models.team import Team as SATeam
 from fastapi import HTTPException
 from services.usage_service import UsageService
@@ -41,11 +41,13 @@ async def get_usage_info(
         db.add(team)
         db.commit()
         db.refresh(team)
+    if not team:
+        raise HTTPException(status_code=500, detail="Team could not be found or created")
 
     # Look up or create user
-    user = db.query(SAUser).filter(SAUser.id == clerk_user_id).first()
+    user = db.query(User).filter(User.id == clerk_user_id).first()
     if not user:
-        user = SAUser(
+        user = User(
             id=clerk_user_id,
             clerk_id=clerk_user_id,
             email=email,
@@ -102,7 +104,9 @@ async def get_usage_summary(
 ):
     """Get a quick usage summary for dashboard display"""
     
-    team = db.query(Team).filter(Team.id == current_user.team_id).first()
+    team = db.query(SATeam).filter(SATeam.id == current_user.team_id).first()
+    if not team:
+        raise HTTPException(status_code=500, detail="Team could not be found or created")
     usage_service = UsageService()
     
     usage_limits = await usage_service.check_usage_limits(team)

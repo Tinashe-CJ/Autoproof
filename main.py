@@ -33,11 +33,11 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(analyze.router, prefix="/api", tags=["Analysis"])
-app.include_router(billing.router, prefix="/api", tags=["Billing"])
-app.include_router(api_keys.router, prefix="/api", tags=["API Keys"])
-app.include_router(usage.router, prefix="/api", tags=["Usage"])
-app.include_router(team.router, prefix="/api", tags=["Team"])
+app.include_router(analyze, prefix="/api", tags=["Analysis"])
+app.include_router(billing, prefix="/api", tags=["Billing"])
+app.include_router(api_keys, prefix="/api", tags=["API Keys"])
+app.include_router(usage, prefix="/api", tags=["Usage"])
+app.include_router(team, prefix="/api", tags=["Team"])
 
 
 @app.get("/")

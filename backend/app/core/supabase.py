@@ -1,5 +1,5 @@
-from supabase import create_client, Client
-from app.core.config import settings
+from supabase.client import create_client, Client
+from backend.app.core.config import settings
 
 # Initialize Supabase client
 supabase: Client = create_client(

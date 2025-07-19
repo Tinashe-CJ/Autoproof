@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, EmailStr
-from supabase import Client
-from app.core.supabase import get_supabase
-from app.models.user import UserResponse
-from app.core.auth import get_current_user
+from supabase.client import create_client, Client
+from backend.app.core.supabase import get_supabase
+from backend.app.models.user import UserResponse
+from backend.app.core.auth import get_current_user
 
 router = APIRouter()
 security = HTTPBearer()

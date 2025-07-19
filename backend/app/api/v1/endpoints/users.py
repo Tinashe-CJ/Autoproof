@@ -1,9 +1,9 @@
 from typing import List
 from fastapi import APIRouter, HTTPException, status, Depends
-from supabase import Client
-from app.core.supabase import get_supabase
-from app.core.auth import get_current_user
-from app.models.user import UserResponse, UserUpdate
+from supabase.client import create_client, Client
+from backend.app.core.supabase import get_supabase
+from backend.app.core.auth import get_current_user
+from backend.app.models.user import UserResponse, UserUpdate
 from config.database import get_db
 from models.user import User as SAUser
 from models.team import Team as SATeam

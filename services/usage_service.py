@@ -7,6 +7,7 @@ from models.team import Team, PlanType
 from models.usage_log import UsageLog
 from models.billing import BillingInfo
 from services.stripe_service import StripeService
+from fastapi import HTTPException, status
 
 
 class UsageService:
@@ -184,22 +185,40 @@ class UsageService:
             "breakdown": overage_data
         }
 
-    async def get_current_plan_for_user(self, db: Session, user_id: str):
-        """Fetch the current plan for a user from Supabase stripe_subscriptions."""
-        # Join stripe_customers and stripe_subscriptions
-        result = db.execute(
-            select(
-                "stripe_subscriptions.price_id",
-                "stripe_subscriptions.status"
-            ).select_from(
-                "stripe_customers"
-            ).join(
-                "stripe_subscriptions",
-                "stripe_customers.customer_id" == "stripe_subscriptions.customer_id"
-            ).where(
-                "stripe_customers.user_id" == user_id
+    async def check_quota(self, team: Team):
+        """
+        Raise HTTP 402 if the team is over their monthly quota.
+        """
+        usage = await self.check_usage_limits(team)
+        if not usage["can_make_request"]:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "error": "Monthly quota exceeded",
+                    "usage": usage,
+                    "message": "Upgrade your plan or wait for monthly reset."
+                }
             )
-        ).first()
-        if result:
-            return {"price_id": result[0], "status": result[1]}
+
+    async def get_current_plan_for_user(self, db: Session, user_id: str):
+        """Fetch the current plan for a user from the billing_info table."""
+        from models.user import User
+        from models.team import Team
+        from models.billing import BillingInfo
+        # Get the user's team_id
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            return None
+        team_id = user.team_id
+        # Get the team's billing info
+        billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team_id).first()
+        if billing_info:
+            return {
+                "stripe_subscription_id": billing_info.stripe_subscription_id,
+                "is_active": billing_info.is_active,
+                "current_period_start": billing_info.current_period_start,
+                "current_period_end": billing_info.current_period_end,
+                "overage_amount": billing_info.overage_amount,
+                "plan": getattr(billing_info, "plan", None)  # If you add a plan field
+            }
         return None

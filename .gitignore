@@ -26,13 +26,136 @@ refresh_jwt.sh
 test_auth.py
 debug_auth.js
 
+# Additional test and debug files
+test_*.py
+*_test.py
+debug_*.py
+performance_test.py
+auto_test_*.py
+simple_auto_test.py
+test_checkout_speed.py
+test_with_real_jwt.py
+get_real_jwt.py
+get_*.jwt.sh
+get_*.jwt.py
+*.jwt
+*.jwt.txt
+
 # Ignore node and Python artifacts
 node_modules/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Ignore Supabase generated files
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+logs/
+temp/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Supabase generated files
 supabase/.env
 supabase/.temp
 supabase/.output
+
+# Stripe and payment related
+stripe-*.json
+*.pem
+certs/
+
+# API keys and secrets (additional patterns)
+*_key.txt
+*_secret.txt
+api_keys.txt
+secrets.txt
+
+# Build and deployment
+.next/
+.nuxt/
+dist/
+build/
+out/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+TODO.md

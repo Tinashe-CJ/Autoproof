@@ -1,9 +1,9 @@
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, status, Depends, Query
-from supabase import Client
-from app.core.supabase import get_supabase
-from app.core.auth import get_current_user
-from app.models.compliance import (
+from supabase.client import create_client, Client
+from backend.app.core.supabase import get_supabase
+from backend.app.core.auth import get_current_user
+from backend.app.models.compliance import (
     ComplianceViolation,
     ComplianceViolationCreate,
     ComplianceViolationUpdate,

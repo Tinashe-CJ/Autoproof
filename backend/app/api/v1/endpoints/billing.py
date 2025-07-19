@@ -1,2 +1,2 @@
 from routers import billing
-router = billing.router 
+router = billing 
