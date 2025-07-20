@@ -489,9 +489,13 @@ const ViolationsFeed = () => {
               ) : (
                 <div className="space-y-4">
                   {violations.map((violation) => (
-                    <div
+                    <motion.div
                       key={violation.id}
-                      className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30 hover:border-slate-500/50 transition-colors"
+                      className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30 hover:border-slate-500/50 transition-all duration-300 hover:scale-[1.02] hover:bg-slate-700/60 hover:shadow-lg hover:shadow-slate-900/50"
+                      whileHover={{ 
+                        scale: 1.02,
+                        transition: { duration: 0.2 }
+                      }}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -534,7 +538,7 @@ const ViolationsFeed = () => {
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}

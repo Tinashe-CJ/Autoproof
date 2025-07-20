@@ -150,15 +150,11 @@ const Dashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
-              <Link to="/">
-                <div className="w-10 h-10 rounded-md bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">A</span>
-                </div>
-              </Link>
+              <div className="w-10 h-10 rounded-md bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center">
+                <span className="text-white font-bold text-lg">A</span>
+              </div>
               <div>
-                <Link to="/">
-                  <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-                </Link>
+                <h1 className="text-2xl font-bold text-white">Dashboard</h1>
                 <p className="text-slate-400 text-sm">Welcome back, {user?.firstName}!</p>
               </div>
             </div>

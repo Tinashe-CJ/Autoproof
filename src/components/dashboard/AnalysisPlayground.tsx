@@ -21,9 +21,10 @@ import {
   Download,
   RefreshCw,
   Settings,
-  Sparkles
+  Sparkles,
+  ArrowLeft
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useApiAuth } from '@/lib/auth';
 import { buildApiUrl, API_CONFIG } from '@/config/api';
@@ -49,6 +50,7 @@ interface AnalysisResult {
 const AnalysisPlayground = () => {
   const { user } = useUser();
   const { getAuthHeaders, isSignedIn } = useApiAuth();
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [source, setSource] = useState<'slack' | 'github' | 'api' | 'manual'>('manual');
   const [file, setFile] = useState<File | null>(null);
@@ -186,6 +188,15 @@ const AnalysisPlayground = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/dashboard')}
+                className="text-white hover:text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
               <Link to="/dashboard">
                 <div className="w-10 h-10 rounded-md bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center">
                   <span className="text-white font-bold text-lg">A</span>

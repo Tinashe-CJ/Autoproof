@@ -450,9 +450,13 @@ const PolicyManagement = () => {
               ) : (
                 <div className="space-y-4">
                   {policies.map((policy) => (
-                    <div
+                    <motion.div
                       key={policy.id}
-                      className="p-6 bg-slate-700/40 rounded-lg border border-slate-600/30 hover:border-slate-500/50 transition-colors"
+                      className="p-6 bg-slate-700/40 rounded-lg border border-slate-600/30 hover:border-slate-500/50 transition-all duration-300 hover:scale-[1.02] hover:bg-slate-700/60 hover:shadow-lg hover:shadow-slate-900/50"
+                      whileHover={{ 
+                        scale: 1.02,
+                        transition: { duration: 0.2 }
+                      }}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -526,7 +530,7 @@ const PolicyManagement = () => {
                           </Button>
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               )}
