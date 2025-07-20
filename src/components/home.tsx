@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MessageSquare, Shield, Code, Lock, Clock, Zap, Check } from "lucide-react";
+import { ArrowRight, MessageSquare, Shield, Code, Lock, Clock, Zap, Check, Search, AlertTriangle, BarChart3, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import FeaturesGrid from "./FeaturesGrid";
 import IntegrationShowcase from "./IntegrationShowcase";
@@ -29,6 +29,9 @@ const Home = () => {
               </a>
               <a href="#integrations" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Integrations
+              </a>
+              <a href="/info" className="text-gray-600 hover:text-gray-900 transition-colors">
+                Learn More
               </a>
               <a href="/pricing" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Pricing
@@ -69,9 +72,9 @@ const Home = () => {
                 Compliance Automation
               </h1>
               <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl mx-auto lg:mx-0">
-                Automatically detect policy violations across Slack and GitHub.
-                Save time and reduce compliance gaps with AutoProof's intelligent
-                monitoring.
+                Stop struggling with manual compliance processes. AutoProof uses AI to automatically detect, 
+                prevent, and manage compliance violations across your entire development workflow. 
+                Reduce audit preparation time by 80% and catch violations before they become breaches.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -82,6 +85,15 @@ const Home = () => {
                 >
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.href = '/info'}
+                  className="border-slate-400 text-slate-300 hover:bg-slate-800 hover:text-white px-8 py-6 h-auto bg-transparent"
+                >
+                  <Shield className="mr-2 h-5 w-5" />
+                  Learn More
                 </Button>
 
                 <Button
@@ -169,6 +181,214 @@ const Home = () => {
         <IntegrationShowcase />
       </section>
 
+      {/* Key Functionality Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Powerful Features for Modern Teams
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              AutoProof provides comprehensive compliance automation tools designed specifically for engineering teams.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+                    <Search className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Analysis Playground</h3>
+                  <p className="text-gray-600 mb-4">
+                    Test compliance analysis with your content in real-time. Upload documents, paste text, 
+                    or connect your integrations to see how AutoProof detects violations.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/info#analysis-playground'}
+                    className="w-full"
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+                    <Shield className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Policy Management</h3>
+                  <p className="text-gray-600 mb-4">
+                    Create and customize compliance rules specific to your industry, regulations, 
+                    and internal policies. Support for SOC 2, GDPR, HIPAA, and PCI DSS.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/info#policy-management'}
+                    className="w-full"
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+                    <AlertTriangle className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Violations Feed</h3>
+                  <p className="text-gray-600 mb-4">
+                    Monitor and manage compliance violations in real-time. Get instant alerts, 
+                    track resolution progress, and maintain audit trails automatically.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/info#violations-feed'}
+                    className="w-full"
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+                    <Code className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">API Integration</h3>
+                  <p className="text-gray-600 mb-4">
+                    Integrate AutoProof into your existing workflow with our comprehensive API. 
+                    Custom integrations, webhooks, and SDKs for all major platforms.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/info#api-integration'}
+                    className="w-full"
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+                    <BarChart3 className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Analytics & Reporting</h3>
+                  <p className="text-gray-600 mb-4">
+                    Comprehensive compliance analytics, trend analysis, and automated reporting. 
+                    Generate audit-ready reports for stakeholders and regulators.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/info#analytics'}
+                    className="w-full"
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+            >
+              <Card className="h-full hover:shadow-lg transition-all duration-300">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 flex items-center justify-center mb-4">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">Team Collaboration</h3>
+                  <p className="text-gray-600 mb-4">
+                    Built for engineering teams with role-based access, shared dashboards, 
+                    and collaborative violation resolution workflows.
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.location.href = '/info#team-collaboration'}
+                    className="w-full"
+                  >
+                    Learn More
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+            className="text-center mt-12"
+          >
+            <Button
+              size="lg"
+              onClick={() => window.location.href = '/info'}
+              className="bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white font-medium px-8 py-6 h-auto"
+            >
+              <Shield className="mr-2 h-5 w-5" />
+              Explore All Features
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </motion.div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-blue-600 to-violet-600">
         <div className="container mx-auto px-4 text-center">
@@ -227,6 +447,7 @@ const Home = () => {
               <ul className="space-y-2 text-gray-400">
                 <li><a href="#features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="#integrations" className="hover:text-white transition-colors">Integrations</a></li>
+                <li><a href="/info" className="hover:text-white transition-colors">Learn More</a></li>
                 <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
               </ul>
             </div>
@@ -241,7 +462,7 @@ const Home = () => {
             <div>
               <h3 className="font-semibold mb-4">Support</h3>
               <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="/info" className="hover:text-white transition-colors">Documentation</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>

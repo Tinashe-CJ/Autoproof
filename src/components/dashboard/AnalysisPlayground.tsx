@@ -252,11 +252,11 @@ const AnalysisPlayground = () => {
                     <SelectTrigger className="bg-slate-700/40 border-slate-600/50 text-white">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
-                      <SelectItem value="manual">Manual Input</SelectItem>
-                      <SelectItem value="slack">Slack Message</SelectItem>
-                      <SelectItem value="github">GitHub Content</SelectItem>
-                      <SelectItem value="api">API Response</SelectItem>
+                    <SelectContent className="bg-slate-800 border-slate-600 shadow-xl">
+                      <SelectItem value="manual" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Manual Input</SelectItem>
+                      <SelectItem value="slack" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">Slack Message</SelectItem>
+                      <SelectItem value="github" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">GitHub Content</SelectItem>
+                      <SelectItem value="api" className="text-white hover:bg-slate-700 focus:bg-slate-700 cursor-pointer">API Response</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -266,23 +266,24 @@ const AnalysisPlayground = () => {
                   <label className="text-sm font-medium text-slate-300 mb-2 block">
                     Upload File (Optional)
                   </label>
-                  <div className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center hover:border-slate-500/50 transition-colors">
+                  <div 
+                    className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center hover:border-slate-500/50 transition-colors cursor-pointer"
+                    onClick={() => document.getElementById('file-upload')?.click()}
+                  >
                     <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
                     <p className="text-slate-400 text-sm mb-2">
                       {file ? file.name : 'Drop a file here or click to browse'}
                     </p>
                     <input
                       type="file"
-                      accept=".txt,.pdf,.json,.md"
+                      accept=".txt,.pdf,.json,.md,.doc,.docx"
                       onChange={handleFileUpload}
                       className="hidden"
                       id="file-upload"
                     />
-                    <label htmlFor="file-upload">
-                      <Button variant="ghost" className="text-blue-400 hover:text-blue-300">
-                        Choose File
-                      </Button>
-                    </label>
+                    <Button variant="ghost" className="text-blue-400 hover:text-blue-300">
+                      Choose File
+                    </Button>
                     {file && (
                       <div className="mt-2 flex items-center justify-center space-x-2">
                         <FileText className="h-4 w-4 text-green-400" />

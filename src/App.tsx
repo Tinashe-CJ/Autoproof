@@ -12,6 +12,7 @@ import AnalysisPlayground from "./components/dashboard/AnalysisPlayground";
 import ApiKeyManagement from "./components/dashboard/ApiKeyManagement";
 import SuccessPage from "./components/success/SuccessPage";
 import PricingPage from "./components/pricing/PricingPage";
+import InfoPage from "./components/InfoPage";
 import { BillingManager } from "./components/billing";
 import AuthDebugger from "./components/auth/AuthDebugger";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,6 +28,7 @@ function App() {
           <Route path="/sign-up/*" element={<CustomSignUp />} />
           <Route path="/user-profile/*" element={<CustomUserProfile />} />
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/info" element={<InfoPage />} />
           <Route path="/success" element={<SuccessPage />} />
           <Route 
             path="/dashboard" 
