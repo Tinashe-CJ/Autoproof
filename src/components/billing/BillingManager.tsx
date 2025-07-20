@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, CreditCard, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { Loader2, CreditCard, ExternalLink, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import Footer from '../Footer';
 import { Link } from 'react-router-dom';
 
@@ -248,6 +248,16 @@ const BillingManager: React.FC = () => {
       <header className="relative z-10 bg-white/10 backdrop-blur-md border-b border-white/20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
+            {/* Back Button */}
+            <div className="mb-4">
+              <Link to="/dashboard">
+                <Button variant="ghost" className="text-slate-300 hover:text-white hover:bg-white/10">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </div>
+            
             <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-violet-500/20 border border-blue-500/30 mb-4">
               <Link to="/">
                 <span className="flex items-center">

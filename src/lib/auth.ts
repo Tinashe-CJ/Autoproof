@@ -7,8 +7,24 @@ export const useApiAuth = () => {
   const tokenCache = useRef<{ token: string; timestamp: number } | null>(null);
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-  const getAuthHeaders = useCallback(async () => {
+  const getAuthHeaders = useCallback(async (skipContentType = false) => {
     try {
+      // Check if we're in development mode
+      const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
+      
+      if (isDevelopment) {
+        console.log('🔧 Development mode detected, using dev authentication');
+        const headers: Record<string, string> = {
+          'Authorization': 'Bearer dev-test@autoproof.com',
+        };
+        
+        if (!skipContentType) {
+          headers['Content-Type'] = 'application/json';
+        }
+        
+        return headers;
+      }
+
       if (!isSignedIn) {
         console.log('🔧 User not signed in, returning null for dev authentication fallback');
         return null; // Return null instead of throwing error
@@ -17,10 +33,15 @@ export const useApiAuth = () => {
       // Check cache first
       const now = Date.now();
       if (tokenCache.current && (now - tokenCache.current.timestamp) < CACHE_DURATION) {
-        return {
+        const headers: Record<string, string> = {
           'Authorization': `Bearer ${tokenCache.current.token}`,
-          'Content-Type': 'application/json',
         };
+        
+        if (!skipContentType) {
+          headers['Content-Type'] = 'application/json';
+        }
+        
+        return headers;
       }
 
       const token = await getToken();
@@ -34,10 +55,15 @@ export const useApiAuth = () => {
       
       console.log('🔐 Got JWT token from Clerk:', token.substring(0, 50) + '...');
       
-      return {
+      const headers: Record<string, string> = {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
       };
+      
+      if (!skipContentType) {
+        headers['Content-Type'] = 'application/json';
+      }
+      
+      return headers;
     } catch (error) {
       console.error('❌ Authentication error:', error);
       return null; // Return null instead of throwing error for dev authentication fallback

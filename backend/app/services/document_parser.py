@@ -71,8 +71,22 @@ class DocumentParser:
                     f"File size {file_size} bytes exceeds maximum allowed size of {self.MAX_FILE_SIZE} bytes"
                 )
             
-            # Detect MIME type using magic bytes
-            mime_type = magic.from_buffer(file_content, mime=True)
+            # Detect MIME type using magic bytes (with fallback)
+            mime_type = None
+            try:
+                mime_type = magic.from_buffer(file_content, mime=True)
+            except Exception as e:
+                logger.warning(f"Magic library failed, using extension fallback: {e}")
+                # Fallback to extension-based detection
+                file_ext = Path(filename).suffix.lower()
+                extension_to_mime = {
+                    '.pdf': 'application/pdf',
+                    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                    '.txt': 'text/plain',
+                    '.md': 'text/markdown',
+                    '.json': 'application/json'
+                }
+                mime_type = extension_to_mime.get(file_ext, 'application/octet-stream')
             
             if mime_type not in self.SUPPORTED_TYPES:
                 raise DocumentValidationError(

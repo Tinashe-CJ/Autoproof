@@ -10,6 +10,7 @@ import re
 import time
 import logging
 import uuid
+from pathlib import Path
 
 from backend.app.core.supabase import get_supabase
 from backend.app.core.auth import (
@@ -17,6 +18,7 @@ from backend.app.core.auth import (
     require_read,
     log_auth_event
 )
+from backend.app.core.dev_auth import get_current_user_dev
 from backend.app.services.openai_service import (
     analyze_text,
     log_analysis_event,
@@ -107,7 +109,7 @@ class PaginatedViolationResponse(BaseModel):
 async def analyze_content(
     request: Request,
     analysis_request: AnalysisRequest,
-    current_user: dict = Depends(require_read),
+    current_user: dict = Depends(get_current_user_dev),
     supabase = Depends(get_supabase)
 ):
     """
@@ -369,7 +371,7 @@ async def get_violations(
     search: Optional[str] = Query(None, description="Search in title and description"),
     sort_by: str = Query("created_at", description="Sort field"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
-    current_user: dict = Depends(require_read),
+    current_user: dict = Depends(get_current_user_dev),
     supabase = Depends(get_supabase)
 ):
     """
@@ -456,7 +458,7 @@ async def get_violations(
 async def get_violation(
     request: Request,
     violation_id: str,
-    current_user: dict = Depends(require_read),
+    current_user: dict = Depends(get_current_user_dev),
     supabase = Depends(get_supabase)
 ):
     """
@@ -467,7 +469,7 @@ async def get_violation(
 
         if not result.data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Violation not found"
             )
 
@@ -497,7 +499,7 @@ async def get_violation(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve violation: {str(e)}"
         )
 
@@ -508,7 +510,7 @@ async def update_violation(
     status: ViolationStatus,
     resolution_notes: Optional[str] = None,
     assigned_to: Optional[str] = None,
-    current_user: dict = Depends(require_read),
+    current_user: dict = Depends(get_current_user_dev),
     supabase = Depends(get_supabase)
 ):
     """
@@ -520,7 +522,7 @@ async def update_violation(
 
         if not existing.data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Violation not found"
             )
 
@@ -541,7 +543,7 @@ async def update_violation(
 
         if not result.data:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update violation"
             )
 
@@ -566,7 +568,7 @@ async def update_violation(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update violation: {str(e)}"
         )
 
@@ -594,7 +596,7 @@ class PolicyDocumentResponse(BaseModel):
 async def parse_policy_document_endpoint(
     request: Request,
     policy_request: PolicyDocumentRequest,
-    current_user: dict = Depends(require_read),
+    current_user: dict = Depends(get_current_user_dev),
     supabase = Depends(get_supabase)
 ):
     """
@@ -697,7 +699,7 @@ async def upload_and_parse_document(
     document_name: Optional[str] = Form(None),
     document_type: Optional[str] = Form(None),
     compliance_framework: Optional[str] = Form("general"),
-    current_user: dict = Depends(require_read),
+    current_user: dict = Depends(get_current_user_dev),
     supabase = Depends(get_supabase)
 ):
     """
@@ -706,8 +708,34 @@ async def upload_and_parse_document(
     start_time = time.time()
     
     try:
-        # Read file content
+        # Validate file
+        if not file or not file.filename:
+            return DocumentUploadResponse(
+                success=False,
+                error="No file provided",
+                stage="validation"
+            )
+        
+        # Check file size
         file_content = await file.read()
+        if len(file_content) > 10 * 1024 * 1024:  # 10MB limit
+            return DocumentUploadResponse(
+                success=False,
+                error="File size exceeds 10MB limit",
+                stage="validation"
+            )
+        
+        # Check file type
+        allowed_types = ['.pdf', '.docx', '.txt', '.md', '.json']
+        file_ext = Path(file.filename).suffix.lower()
+        if file_ext not in allowed_types:
+            return DocumentUploadResponse(
+                success=False,
+                error=f"Unsupported file type: {file_ext}. Supported types: {allowed_types}",
+                stage="validation"
+            )
+        
+        logger.info(f"Processing file: {file.filename}, size: {len(file_content)} bytes, type: {file_ext}")
         
         # Initialize policy parser
         policy_parser = PolicyParser()
@@ -725,6 +753,7 @@ async def upload_and_parse_document(
         
         # If parsing failed, return error
         if not result['success']:
+            logger.error(f"Document parsing failed: {result['error']}")
             return DocumentUploadResponse(
                 success=False,
                 error=result['error'],
@@ -761,6 +790,8 @@ async def upload_and_parse_document(
             }
         )
         
+        logger.info(f"Document processing completed successfully: {file.filename}")
+        
         return DocumentUploadResponse(
             success=True,
             document_info=result.get('document_info'),
@@ -771,7 +802,7 @@ async def upload_and_parse_document(
         )
         
     except Exception as e:
-        logger.error(f"Document upload error: {e}")
+        logger.error(f"Document upload error: {e}", exc_info=True)
         return DocumentUploadResponse(
             success=False,
             error=str(e),

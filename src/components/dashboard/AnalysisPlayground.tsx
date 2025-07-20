@@ -67,45 +67,92 @@ const AnalysisPlayground = () => {
     const file = event.target.files?.[0];
     if (file) {
       setFile(file);
-      // Read file content for preview
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        setContent(text.substring(0, 1000)); // Preview first 1000 chars
-      };
-      reader.readAsText(file);
+      // For PDF files, we can't read as text directly, so just show the filename
+      if (file.type === 'application/pdf') {
+        setContent(`PDF file uploaded: ${file.name}\n\nContent will be extracted during analysis.`);
+      } else {
+        // Read file content for preview (only for text-based files)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target?.result as string;
+          if (typeof text === 'string') {
+            setContent(text.substring(0, 1000)); // Preview first 1000 chars
+          } else {
+            setContent(`File uploaded: ${file.name}\n\nContent will be processed during analysis.`);
+          }
+        };
+        reader.onerror = () => {
+          setContent(`File uploaded: ${file.name}\n\nContent will be processed during analysis.`);
+        };
+        reader.readAsText(file);
+      }
     }
   };
 
   const analyzeContent = async () => {
+    console.log('=== analyzeContent called ===');
+    console.log('File state:', file);
+    console.log('Content state:', content);
+    console.log('Source state:', source);
+    
+    if (!file) {
+      console.log('No file selected, showing error');
+      setError('Please select a file to upload');
+      return;
+    }
     if (!content.trim() && !file) {
+      console.log('No content and no file, showing error');
       setError('Please provide content to analyze');
       return;
     }
 
+    console.log('Starting analysis...');
     setIsAnalyzing(true);
     setError(null);
     setResults(null);
 
     try {
-      const headers = await getAuthHeaders();
+      const headers = await getAuthHeaders(file ? true : false); // Skip Content-Type for file uploads
+      console.log('Auth headers:', headers);
       
       let response;
       if (file) {
         // File upload analysis
+        console.log('=== File upload path ===');
+        console.log('File object:', file);
+        console.log('File name:', file.name);
+        console.log('File size:', file.size);
+        console.log('File type:', file.type);
+        
         const formData = new FormData();
         formData.append('file', file);
         formData.append('source', source);
+        formData.append('document_name', file.name);
+        formData.append('document_type', file.type);
+        formData.append('compliance_framework', 'custom');
+        
+        // Debug FormData contents
+        console.log('FormData entries:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
+        
+        console.log('Request URL:', `${buildApiUrl(API_CONFIG.ENDPOINTS.ANALYZE)}/upload-document`);
+        console.log('Request headers:', headers);
         
         response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.ANALYZE)}/upload-document`, {
           method: 'POST',
           headers: {
             ...headers,
-            // Don't set Content-Type for FormData
+            // Don't set Content-Type for FormData - let browser set it with boundary
           },
           body: formData,
         });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       } else {
+        console.log('=== Text analysis path ===');
         // Text analysis
         response = await fetch(`${buildApiUrl(API_CONFIG.ENDPOINTS.ANALYZE)}`, {
           method: 'POST',
@@ -127,14 +174,80 @@ const AnalysisPlayground = () => {
 
       if (response.ok) {
         const data = await response.json();
-        setResults(data);
+        
+        if (file) {
+          // Handle upload-document response format
+          if (data.success) {
+            // Convert DocumentUploadResponse to AnalysisResponse format
+            const analysisResponse = {
+              violations: data.extracted_rules?.map((rule: any) => ({
+                policy_rule_id: rule.id,
+                policy_rule_name: rule.name,
+                violation_type: 'policy_violation',
+                severity: rule.severity || 'medium',
+                title: rule.name,
+                description: rule.description,
+                matched_content: typeof rule.context === 'string' ? rule.context : 
+                               typeof rule.description === 'string' ? rule.description : 
+                               JSON.stringify(rule.context || rule.description || ''),
+                confidence_score: rule.extraction_confidence || 0.8
+              })) || [],
+              total_violations: data.extracted_rules?.length || 0,
+              analysis_summary: {
+                processing_time_ms: data.processing_metadata?.processing_time_ms || 0,
+                token_usage: data.processing_metadata?.token_usage || 0,
+                source: 'document_upload',
+                content_length: data.text_analysis?.text_length || 0,
+                ai_analysis: true
+              },
+              processing_time_ms: data.processing_metadata?.processing_time_ms || 0
+            };
+            setResults(analysisResponse);
+          } else {
+            setError(data.error || 'Document processing failed');
+          }
+        } else {
+          // Handle regular analyze response format
+          // Ensure all violation fields are properly typed
+          if (data.violations) {
+            data.violations = data.violations.map((violation: any) => ({
+              ...violation,
+              matched_content: typeof violation.matched_content === 'string' 
+                ? violation.matched_content 
+                : JSON.stringify(violation.matched_content || ''),
+              description: typeof violation.description === 'string' 
+                ? violation.description 
+                : JSON.stringify(violation.description || ''),
+              title: typeof violation.title === 'string' 
+                ? violation.title 
+                : JSON.stringify(violation.title || '')
+            }));
+          }
+          setResults(data);
+        }
       } else {
         const errorData = await response.json();
-        setError(errorData.detail || 'Analysis failed');
+        console.error('Analysis error response:', errorData);
+        // Add this line for debugging
+        console.log('Full backend error object:', errorData);
+        
+        // Handle different error response formats
+        let errorMessage = 'Analysis failed';
+        if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.error) {
+          errorMessage = errorData.error;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        }
+        
+        setError(errorMessage);
       }
     } catch (err) {
-      setError('Network error occurred');
       console.error('Analysis error:', err);
+      setError('Network error occurred');
     } finally {
       setIsAnalyzing(false);
     }
@@ -403,21 +516,27 @@ const AnalysisPlayground = () => {
                             className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30"
                           >
                             <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-white font-medium">{violation.title}</h4>
-                              <Badge className={getSeverityColor(violation.severity)}>
-                                {violation.severity}
+                              <h4 className="text-white font-medium">
+                                {typeof violation.title === 'string' ? violation.title : JSON.stringify(violation.title || '')}
+                              </h4>
+                              <Badge className={getSeverityColor(typeof violation.severity === 'string' ? violation.severity : 'medium')}>
+                                {typeof violation.severity === 'string' ? violation.severity : 'medium'}
                               </Badge>
                             </div>
-                            <p className="text-slate-300 text-sm mb-3">{violation.description}</p>
+                            <p className="text-slate-300 text-sm mb-3">
+                              {typeof violation.description === 'string' ? violation.description : JSON.stringify(violation.description || '')}
+                            </p>
                             <div className="flex items-center justify-between text-xs text-slate-500">
-                              <span>Confidence: {Math.round(violation.confidence_score * 100)}%</span>
-                              <span>Type: {violation.violation_type}</span>
+                              <span>Confidence: {Math.round((violation.confidence_score || 0) * 100)}%</span>
+                              <span>Type: {typeof violation.violation_type === 'string' ? violation.violation_type : JSON.stringify(violation.violation_type || '')}</span>
                             </div>
                             {violation.matched_content && (
                               <div className="mt-3 p-3 bg-slate-600/30 rounded border-l-4 border-yellow-500/50">
                                 <p className="text-slate-400 text-xs mb-1">Matched Content:</p>
                                 <p className="text-slate-300 text-sm font-mono">
-                                  "{violation.matched_content}"
+                                  "{typeof violation.matched_content === 'string' 
+                                    ? violation.matched_content 
+                                    : JSON.stringify(violation.matched_content)}"
                                 </p>
                               </div>
                             )}
