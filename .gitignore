@@ -178,10 +178,6 @@ dev-debug.log
 *.sw?
 # OS specific
 
-# Task files
-# tasks.json
-# tasks/ 
-
 # Additional secrets and sensitive files
 *.pem
 *.key
@@ -219,6 +215,40 @@ get_*.jwt.py
 *.jwt
 *.jwt.txt
 
+# Test directories and coverage
+tests/
+test/
+__tests__/
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+nosetests.xml
+coverage/
+
+# Test configuration files
+pytest.ini
+tox.ini
+setup.cfg
+.covrc
+.coveragerc
+
+# Test data and fixtures
+test_data/
+fixtures/
+test_fixtures/
+sample_data/
+mock_data/
+
+# Test reports and outputs
+test_reports/
+test_output/
+test_results/
+junit.xml
+test-results.xml
+
 # Configuration files with secrets
 config/secrets.py
 config/local.py
@@ -252,6 +282,140 @@ docs/test-examples/
 stripe-test-*.py
 stripe-test-*.js
 stripe-test-*.ts
+
+# Additional sensitive data patterns
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+*.der
+
+# API keys and tokens
+api_keys.txt
+api_keys.json
+tokens.txt
+tokens.json
+secrets.json
+credentials.json
+service_account.json
+firebase-key.json
+google-credentials.json
+
+# Environment and configuration
+.env.local
+.env.development
+.env.test
+.env.staging
+.env.production
+.env.*.local
+.env.*.development
+.env.*.test
+.env.*.staging
+.env.*.production
+
+# Authentication and session files
+.session
+.sessions/
+auth_tokens.json
+clerk_tokens.json
+jwt_tokens.json
+
+# Database credentials and connections
+database_urls.txt
+db_credentials.json
+connection_strings.txt
+
+# Payment and billing sensitive data
+stripe_keys.json
+stripe_webhooks.json
+payment_keys.json
+billing_credentials.json
+
+# Cloud provider credentials
+aws_credentials.json
+azure_credentials.json
+gcp_credentials.json
+cloudflare_credentials.json
+
+# SSL certificates and keys
+ssl/
+certificates/
+certs/
+keys/
+private_keys/
+
+# Logs with sensitive information
+logs/
+*.log
+debug.log
+error.log
+access.log
+auth.log
+payment.log
+
+# Backup files with sensitive data
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
+# IDE and editor files that might contain sensitive data
+.vscode/settings.json
+.idea/workspace.xml
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js specific sensitive files
+.npmrc
+.yarnrc
+.yarnrc.yml
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python specific sensitive files
+pip.conf
+pip-log.txt
+pip-delete-this-directory.txt
+poetry.lock
+Pipfile.lock
+
+# Docker and container sensitive files
+.dockerignore
+docker-compose.override.yml
+docker-compose.prod.yml
+Dockerfile.prod
+
+# CI/CD sensitive files
+.github/workflows/secrets.yml
+.gitlab-ci.yml
+.travis.yml
+.circleci/config.yml
+azure-pipelines.yml
+
+# Monitoring and analytics sensitive data
+sentry.properties
+newrelic.ini
+datadog.yml
+grafana.ini
+prometheus.yml
 test_stripe.py
 list_stripe_prices.py
 test_checkout_plans.py
@@ -356,5 +520,7 @@ azure-credentials.json
 
 # Taskmaster files (optional - uncomment if you don't want to track tasks)
 # .taskmaster/
+
+# Task files
 # tasks.json
-# tasks/
+# tasks/ 

@@ -17,10 +17,12 @@ import {
   TrendingUp, 
   CheckCircle, 
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   Star,
   Calendar,
-  Users
+  Users,
+  Key
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -434,18 +436,34 @@ const Dashboard = () => {
                   
                   <Button 
                     className="w-full justify-start bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0"
-                    onClick={() => navigate('/pricing')}
+                    onClick={() => navigate('/violations')}
                   >
-                    <Star className="h-4 w-4 mr-2" />
-                    View All Plans
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    View Violations
                   </Button>
                   
                   <Button 
                     className="w-full justify-start bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0"
-                    onClick={() => navigate('/analytics')}
+                    onClick={() => navigate('/policies')}
                   >
-                    <Activity className="h-4 w-4 mr-2" />
-                    View Analytics
+                    <Shield className="h-4 w-4 mr-2" />
+                    Manage Policies
+                  </Button>
+                  
+                  <Button 
+                    className="w-full justify-start bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0"
+                    onClick={() => navigate('/analyze')}
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Analysis Playground
+                  </Button>
+                  
+                  <Button 
+                    className="w-full justify-start bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0"
+                    onClick={() => navigate('/api-keys')}
+                  >
+                    <Key className="h-4 w-4 mr-2" />
+                    API Keys
                   </Button>
                 </CardContent>
               </Card>

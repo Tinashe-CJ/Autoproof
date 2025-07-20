@@ -1,0 +1,54 @@
+# Task ID: 21
+# Title: Implement File Upload Analysis
+# Status: pending
+# Dependencies: 20
+# Priority: medium
+# Description: Support PDF file upload for compliance analysis, extracting text and processing through the standard analysis pipeline.
+# Details:
+Implement the File Upload Analysis feature with the following components:
+
+1. API Endpoint:
+   - Create POST /api/analyze/file endpoint
+   - Support multipart/form-data for file uploads
+   - Validate file types (PDF only initially)
+   - Implement 10MB file size limit
+
+2. PDF Text Extraction:
+   - Use PyPDF2 3.0+ or pdfminer.six 20221105+ for text extraction
+   - Handle various PDF formats and encodings
+   - Implement error handling for corrupt or password-protected files
+   - Extract text while preserving document structure where possible
+
+3. Text Processing:
+   - Chunk extracted text if it exceeds token limits
+   - Process each chunk through standard analysis pipeline
+   - Merge results from multiple chunks
+   - Remove duplicates and consolidate similar violations
+
+4. Response Formatting:
+   - Return results in same format as text analysis API
+   - Include document metadata in response
+   - Provide page references for violations when possible
+
+5. Performance Considerations:
+   - Implement background processing for large files
+   - Add progress tracking for long-running extractions
+   - Cache extraction results to avoid reprocessing
+
+6. Frontend Integration:
+   - Create file upload component with drag-and-drop support
+   - Show upload progress indicator
+   - Display processing status updates
+   - Present results in user-friendly format
+
+Ensure proper error handling for various file-related issues and maintain consistent response format with the text analysis API.
+
+# Test Strategy:
+1. Test file upload with various PDF types and sizes
+2. Verify text extraction accuracy from different PDF formats
+3. Test handling of corrupt or invalid files
+4. Measure processing time for various file sizes
+5. Validate chunking and result merging for large documents
+6. Test concurrent file uploads
+7. Verify error handling for various failure scenarios
+8. Test frontend integration and user experience

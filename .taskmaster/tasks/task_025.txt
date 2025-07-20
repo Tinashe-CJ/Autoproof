@@ -1,0 +1,58 @@
+# Task ID: 25
+# Title: Implement API Key Management
+# Status: pending
+# Dependencies: 14, 15
+# Priority: medium
+# Description: Create functionality to generate and manage API keys for external integrations with tracking and revocation capabilities.
+# Details:
+Implement the API Key Management feature with the following components:
+
+1. UI Implementation:
+   - Create React component for /dashboard/api-keys route
+   - Design table view of existing API keys
+   - Add creation form with name input
+   - Implement revocation controls
+   - Show usage statistics per key
+
+2. API Key Generation:
+   - Create POST /api/api-keys endpoint
+   - Generate secure API keys with 32-byte entropy
+   - Use crypto.randomBytes or similar for generation
+   - Store key hash (not plaintext) in database
+   - Return full key only once during creation
+
+3. API Key Listing:
+   - Create GET /api/api-keys endpoint
+   - Return list of active keys with metadata
+   - Include creation date, last used date
+   - Show usage statistics
+
+4. Key Revocation:
+   - Create DELETE /api/api-keys/{id} endpoint
+   - Implement soft deletion (revocation flag)
+   - Add confirmation dialog in UI
+   - Handle active requests gracefully
+
+5. Usage Tracking:
+   - Update authentication middleware to track key usage
+   - Record last accessed timestamp
+   - Count requests per key
+   - Implement per-key rate limits
+
+6. Security Measures:
+   - Add key rotation recommendations
+   - Implement automatic expiration for unused keys
+   - Add IP restriction options (optional)
+   - Log suspicious usage patterns
+
+Ensure proper error handling and implement confirmation steps for security-sensitive operations.
+
+# Test Strategy:
+1. Test API key generation for proper entropy
+2. Verify key listing shows correct metadata
+3. Test revocation functionality
+4. Validate usage tracking accuracy
+5. Test rate limiting per key
+6. Verify security measures function correctly
+7. Test authentication using generated keys
+8. Validate error handling for various scenarios

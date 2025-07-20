@@ -1,0 +1,116 @@
+# Task ID: 18
+# Title: Implement Slack Integration
+# Status: pending
+# Dependencies: 14, 15
+# Priority: high
+# Description: Develop the Slack integration for monitoring messages in real-time and sending alerts for policy violations.
+# Details:
+Implement the Slack integration with the following components:
+
+1. Slack App Configuration:
+   - Create Slack App in Slack API dashboard
+   - Configure OAuth scopes: channels:read, chat:write, im:write
+   - Setup Event Subscriptions for message.channels, message.groups
+   - Generate and store client credentials securely
+
+2. OAuth Flow:
+   - Create frontend integration page for Slack connection
+   - Implement OAuth redirect handler
+   - Store access tokens securely in database
+   - Handle token refresh and revocation
+
+3. Webhook Endpoint:
+   - Create POST /api/webhooks/slack endpoint
+   - Implement signature verification using SLACK_SIGNING_SECRET
+   - Process incoming events asynchronously
+   - Return 200 OK response immediately to acknowledge receipt
+
+4. Message Processing:
+   - Extract message content and metadata
+   - Filter out bot messages and irrelevant events
+   - Send message text to analysis service
+   - Process analysis results
+
+5. Alert Mechanism:
+   - Implement private DM alerts using chat.postMessage API
+   - Format violation messages with actionable information
+   - Include links to dashboard for more details
+   - Add reaction to original message (optional)
+
+6. Channel Configuration:
+   - Allow teams to specify which channels to monitor
+   - Implement channel-specific rule sets
+   - Store configuration in database
+
+7. Rate Limiting and Quotas:
+   - Implement token bucket rate limiting
+   - Track usage against subscription limits
+   - Handle overages according to pricing policy
+
+Ensure the integration meets the 5-second alert delivery requirement specified in the PRD.
+
+# Test Strategy:
+1. Test webhook signature verification with valid and invalid signatures
+2. Verify OAuth flow completes successfully
+3. Test message event processing with various message types
+4. Measure end-to-end processing time from message to alert
+5. Verify DM alerts are formatted correctly
+6. Test channel configuration changes take effect
+7. Validate rate limiting behavior
+8. Test error handling for API failures
+
+# Subtasks:
+## 1. Slack App Creation and OAuth Scopes [pending]
+### Dependencies: None
+### Description: Create a new Slack app in the Slack API dashboard, configure required OAuth scopes (channels:read, chat:write, im:write), set up event subscriptions, and securely generate/store client credentials.
+### Details:
+Ensure the app is registered with the correct permissions and event subscriptions for message monitoring and alerting. Store credentials in a secure secrets manager.
+
+## 2. OAuth Flow and Token Storage [pending]
+### Dependencies: 18.1
+### Description: Implement the OAuth 2.0 flow for Slack, including frontend integration, redirect handling, and secure storage of access tokens.
+### Details:
+Build the frontend connection page, handle OAuth redirects, exchange codes for tokens, and store tokens securely in the database with proper encryption.
+
+## 3. Webhook Endpoint and Signature Verification [pending]
+### Dependencies: 18.2
+### Description: Develop a webhook endpoint to receive Slack events and implement signature verification to ensure authenticity.
+### Details:
+Set up a public endpoint for Slack event delivery, verify requests using Slack's signing secret, and reject invalid or replayed requests.
+
+## 4. Event Processing and Filtering [pending]
+### Dependencies: 18.3
+### Description: Process incoming Slack events, filter relevant message events, and discard or ignore irrelevant or duplicate events.
+### Details:
+Implement logic to handle only message events from monitored channels or groups, deduplicate events, and validate event payloads.
+
+## 5. Message Analysis Integration [pending]
+### Dependencies: 18.4
+### Description: Integrate the message analysis pipeline to evaluate Slack messages for policy violations.
+### Details:
+Pass filtered message content to the analysis engine, handle asynchronous processing, and manage analysis results for alerting.
+
+## 6. Alert DM Formatting and Delivery [pending]
+### Dependencies: 18.5
+### Description: Format alert messages using Slack's Block Kit or mrkdwn and deliver direct messages (DMs) to relevant users.
+### Details:
+Design alert templates for clarity, use Slack's formatting best practices, and send DMs via chat:write and im:write scopes.
+
+## 7. Channel Configuration UI and Backend [pending]
+### Dependencies: None
+### Description: Build a UI and backend for configuring which Slack channels are monitored and how alerts are routed.
+### Details:
+Provide a user interface for selecting channels, saving preferences, and updating backend configuration for channel monitoring.
+
+## 8. Rate Limiting and Quota Enforcement [pending]
+### Dependencies: None
+### Description: Implement rate limiting and quota enforcement for Slack API usage and alert delivery to prevent abuse and comply with Slack limits.
+### Details:
+Track API calls and alert frequency per workspace/user, enforce limits, and provide feedback or backoff when limits are reached.
+
+## 9. Error Handling and Monitoring [pending]
+### Dependencies: None
+### Description: Add comprehensive error handling and monitoring for all Slack integration components.
+### Details:
+Log errors, handle Slack API failures gracefully, set up alerting for integration issues, and monitor end-to-end processing health.
+

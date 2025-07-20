@@ -20,12 +20,12 @@ python-jose
 # Session pooling and connection management
 # sqlalchemy[pooling] - removed as it's not a valid extra
 # Additional testing dependencies
-pytest-cov
-pytest-mock
+pytest-cov==4.1.0
+pytest-mock==3.12.0
 # Development dependencies
-black
-flake8
-mypy
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
 # Database utilities
 # psycopg2-binary (already included above)
 # Environment management  
@@ -38,3 +38,71 @@ orjson
 python-dateutil
 # Logging
 structlog
+
+# Document parsing libraries
+PyMuPDF==1.23.8
+python-docx==1.1.0
+python-magic==0.4.27
+Pillow==10.1.0
+pytesseract==0.3.10
+spacy==3.7.2
+
+# Additional testing dependencies
+pytest-html==4.1.1
+pytest-xdist==3.3.1
+pytest-benchmark==4.0.0
+pytest-randomly==3.15.0
+pytest-sugar==0.9.7
+pytest-json-report==1.5.0
+pytest-env==1.1.3
+pytest-dotenv==1.0.0
+pytest-mock==3.12.0
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+pytest-timeout==2.1.0
+pytest-repeat==0.9.1
+pytest-rerunfailures==12.0
+
+# Development and code quality tools
+black==23.11.0
+flake8==6.1.0
+mypy==1.7.1
+isort==5.12.0
+pre-commit==3.5.0
+bandit==1.7.5
+safety==2.3.5
+pip-audit==2.6.1
+coverage==7.3.2
+codecov==2.1.13
+
+# API testing and documentation
+httpx==0.25.2
+requests==2.31.0
+responses==0.24.1
+factory-boy==3.3.0
+faker==20.1.0
+freezegun==1.2.2
+
+# Database testing
+pytest-postgresql==4.1.4
+pytest-mysql==4.1.1
+testcontainers==3.7.1
+
+# Performance and monitoring
+locust==2.17.0
+pytest-benchmark==4.0.0
+memory-profiler==0.61.0
+psutil==5.9.6
+
+# Security testing
+bandit==1.7.5
+safety==2.3.5
+pip-audit==2.6.1
+cryptography==41.0.7
+
+# Additional utilities
+python-dateutil==2.8.2
+pytz==2023.3
+click==8.1.7
+rich==13.7.0
+tqdm==4.66.1

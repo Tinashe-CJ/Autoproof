@@ -123,7 +123,7 @@ const BillingManager: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
       
-      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.BILLING}checkout-session-direct`), {
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.BILLING}/checkout-session-direct`), {
         method: 'POST',
         headers,
         body: JSON.stringify({ plan }),
@@ -166,7 +166,7 @@ const BillingManager: React.FC = () => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
       
-      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.BILLING}portal`), {
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.BILLING}/portal`), {
         method: 'POST',
         headers,
         signal: controller.signal,

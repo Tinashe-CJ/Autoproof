@@ -1,0 +1,120 @@
+# Task ID: 20
+# Title: Implement Text Analysis API
+# Status: pending
+# Dependencies: 14, 15, 16
+# Priority: high
+# Description: Create the core API for analyzing text content against policy rules with structured violation reporting.
+# Details:
+Implement the Text Analysis API with the following components:
+
+1. API Endpoint:
+   - Create POST /api/analyze endpoint
+   - Implement request validation using Pydantic
+   - Support the request schema specified in the PRD
+   - Add authentication and rate limiting middleware
+
+2. GPT-4 Integration:
+   - Use OpenAI Python SDK 1.0+
+   - Create prompt engineering for policy violation detection
+   - Example prompt structure:
+   ```
+   You are a compliance violation detector. Analyze the following text against these policy rules:
+   
+   RULES:
+   {serialized_rules}
+   
+   TEXT TO ANALYZE:
+   {input_text}
+   
+   For each violation, provide:
+   1. The rule_id that was violated
+   2. A description of the violation
+   3. A specific recommendation to fix the issue
+   4. A confidence score (0.0-1.0)
+   5. The severity level from the rule
+   
+   Format your response as a JSON array of violation objects.
+   ```
+
+3. Rule Matching:
+   - Retrieve active rules for the team
+   - Filter rules based on context (source, channel, etc.)
+   - Serialize rules for inclusion in prompt
+
+4. Response Processing:
+   - Parse GPT-4 response into structured violation objects
+   - Filter results based on confidence threshold (e.g., >0.7)
+   - Format response according to schema in PRD
+   - Store violations in violation_logs table
+
+5. Performance Optimization:
+   - Implement request caching using content hash
+   - Add async processing for non-blocking operation
+   - Optimize prompt size to reduce token usage
+
+6. Usage Tracking:
+   - Log analysis requests with token counts
+   - Track usage against subscription quotas
+   - Implement overage handling
+
+Ensure the API meets the 2-second response time requirement specified in the PRD.
+
+# Test Strategy:
+1. Test API with various text inputs and rule sets
+2. Measure response times under different loads
+3. Verify violation detection accuracy with known test cases
+4. Test caching mechanism with repeated requests
+5. Validate usage tracking against subscription limits
+6. Test error handling for various failure scenarios
+7. Verify database logging of violations
+8. Test concurrent requests for stability
+
+# Subtasks:
+## 1. API Endpoint and Request Validation [pending]
+### Dependencies: None
+### Description: Design and implement the POST /api/analyze endpoint. Use Pydantic to enforce request schema validation, ensuring all required fields and data types are checked before processing. Return standardized error messages for validation failures.
+### Details:
+Define clear validation rules, validate inputs early, and automate validation using Pydantic. Ensure error responses are consistent and informative for developers.[1][2]
+
+## 2. Authentication and Rate Limiting [pending]
+### Dependencies: 20.1
+### Description: Integrate authentication middleware to secure the endpoint, using JWT or API keys as appropriate. Implement rate limiting to prevent abuse and ensure fair usage.
+### Details:
+Standardize JWT validation using established libraries, avoid mixing authentication methods, and ensure all endpoints are protected. Apply rate limiting per user or API key.[3]
+
+## 3. GPT-4 Prompt Engineering [pending]
+### Dependencies: 20.1
+### Description: Develop and refine prompt templates for GPT-4 to maximize accuracy in policy violation detection. Ensure prompts are structured, clear, and optimized for compliance analysis.
+### Details:
+Iterate on prompt design to improve detection reliability. Include context, rules, and expected output format in the prompt.
+
+## 4. GPT-4 API Integration [pending]
+### Dependencies: 20.3
+### Description: Integrate the OpenAI Python SDK to send analysis requests to GPT-4. Handle API responses, errors, and retries as needed.
+### Details:
+Ensure secure handling of API keys, manage request/response lifecycle, and implement error handling for API failures.
+
+## 5. Rule Matching and Serialization [pending]
+### Dependencies: 20.3
+### Description: Implement logic to match input text against policy rules and serialize rule definitions for use in prompt construction and response parsing.
+### Details:
+Support flexible rule formats and ensure serialization is compatible with both prompt engineering and downstream processing.
+
+## 6. Response Parsing and Filtering [pending]
+### Dependencies: 20.4, 20.5
+### Description: Parse GPT-4 responses to extract structured violation data. Filter and format results according to the API response schema.
+### Details:
+Implement robust parsing logic to handle variations in GPT-4 output. Validate parsed data before returning to clients.
+
+## 7. Performance Optimizations (Caching, Async) [pending]
+### Dependencies: 20.4, 20.6
+### Description: Optimize API performance by implementing caching for repeated requests and using asynchronous processing where appropriate.
+### Details:
+Cache analysis results for identical requests, use async I/O for external API calls, and monitor for bottlenecks under load.[1]
+
+## 8. Usage Tracking and Logging [pending]
+### Dependencies: 20.2, 20.7
+### Description: Implement comprehensive usage tracking and logging for all analysis requests, including authentication context and rate limit status.
+### Details:
+Log request metadata, track usage per user or API key, and ensure logs are structured for auditability and monitoring.
+

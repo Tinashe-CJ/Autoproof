@@ -1,0 +1,121 @@
+# Task ID: 16
+# Title: Implement Policy Document Parsing Service
+# Status: pending
+# Dependencies: 14, 15
+# Priority: high
+# Description: Create a service that parses policy documents (PDF, text, JSON) and extracts structured compliance rules using GPT-4.
+# Details:
+Implement a policy document parsing service with the following components:
+
+1. Document Upload Handling:
+   - Create API endpoint POST /api/parse-policy
+   - Support multipart/form-data for file uploads
+   - Validate file types (PDF, TXT, JSON)
+   - Implement file size limits (10MB max)
+
+2. Text Extraction:
+   - For PDF: Use PyPDF2 3.0+ or pdfminer.six 20221105+ for text extraction
+   - For TXT: Direct text reading
+   - For JSON: Parse and validate against expected schema
+
+3. GPT-4 Integration:
+   - Use OpenAI Python SDK 1.0+
+   - Create prompt engineering for policy rule extraction
+   - Example prompt structure:
+   ```
+   You are a compliance rule extractor. Extract structured rules from the following policy document:
+   
+   {document_text}
+   
+   For each rule, provide:
+   1. A short identifier/name
+   2. A clear description
+   3. Related keywords
+   4. Specific conditions that would violate this rule
+   5. Severity level (low, medium, high, critical)
+   
+   Format your response as a JSON array of rule objects.
+   ```
+
+4. Response Processing:
+   - Parse GPT-4 response into structured rule objects
+   - Validate extracted rules against expected schema
+   - Store rules in PolicyRule table with team_id association
+
+5. Error Handling:
+   - Implement retry logic for OpenAI API calls
+   - Handle malformed documents gracefully
+   - Provide meaningful error messages for failed parsing
+
+6. Optimization:
+   - Implement chunking for large documents
+   - Add caching for repeated parsing attempts
+   - Use background task processing for large documents
+
+Ensure the service meets the 90% accuracy requirement for standard policy templates.
+
+# Test Strategy:
+1. Test file upload with various document types and sizes
+2. Verify text extraction accuracy from different PDF formats
+3. Test GPT-4 prompt with sample policy documents
+4. Validate rule extraction accuracy against known policy documents
+5. Measure parsing time and optimize for performance
+6. Test error handling with malformed or corrupt documents
+7. Verify database storage of extracted rules
+8. Test concurrent parsing requests for stability
+
+# Subtasks:
+## 1. Implement Document Upload API and Validation [pending]
+### Dependencies: None
+### Description: Develop a POST /api/parse-policy endpoint supporting multipart/form-data for file uploads. Validate file types (PDF, TXT, JSON) and enforce a 10MB file size limit.
+### Details:
+Ensure robust input validation and clear error messages for unsupported file types or oversized files.
+
+## 2. Develop PDF Text Extraction Logic [pending]
+### Dependencies: 16.1
+### Description: Integrate PDF text extraction using PyPDF2 3.0+ or pdfminer.six 20221105+ to handle various PDF formats and encodings.
+### Details:
+Handle edge cases such as corrupt or password-protected PDFs, and ensure extracted text is accurate and complete.
+
+## 3. Implement TXT and JSON Parsing [pending]
+### Dependencies: 16.1
+### Description: For TXT files, read text directly. For JSON files, parse and validate against the expected schema.
+### Details:
+Ensure schema validation for JSON and proper error handling for malformed files.
+
+## 4. Design GPT-4 Prompt Engineering Strategy [pending]
+### Dependencies: 16.2, 16.3
+### Description: Craft effective prompts and system instructions for GPT-4 to extract structured compliance rules from input text.
+### Details:
+Iterate on prompt design to maximize extraction accuracy and clarity, following best practices for system instructions and prompt engineering[2].
+
+## 5. Integrate GPT-4 API [pending]
+### Dependencies: 16.4
+### Description: Connect to the GPT-4 API, sending crafted prompts and handling authentication, rate limits, and response formats.
+### Details:
+Ensure secure API key management and robust handling of API errors and timeouts[1][3].
+
+## 6. Parse and Validate GPT-4 Responses [pending]
+### Dependencies: 16.5
+### Description: Extract structured compliance rules from GPT-4 responses, validating against the expected schema and handling inconsistencies.
+### Details:
+Implement logic to detect and handle malformed or incomplete responses.
+
+## 7. Store Extracted Rules in Database [pending]
+### Dependencies: None
+### Description: Persist validated compliance rules in the database, ensuring schema consistency and traceability to source documents.
+### Details:
+Design database schema for rules and implement storage logic.
+
+## 8. Implement Error Handling and Retry Mechanisms [pending]
+### Dependencies: 16.2, 16.3, 16.5, 16.7
+### Description: Add comprehensive error handling for all stages, including file parsing, GPT-4 API calls, and database operations. Implement retry logic for transient failures.
+### Details:
+Log errors with sufficient context for debugging and provide user-friendly error messages.
+
+## 9. Optimize Performance (Chunking, Caching, Background Tasks) [pending]
+### Dependencies: 16.2, 16.5, 16.7, 16.8
+### Description: Implement chunking for large documents, caching for repeated requests, and background processing for long-running tasks to improve throughput and responsiveness.
+### Details:
+Ensure the system can handle large files and high concurrency efficiently.
+

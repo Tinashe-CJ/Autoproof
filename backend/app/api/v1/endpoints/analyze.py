@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi import APIRouter, HTTPException, Depends, Query, Request, File, UploadFile, Form
 from fastapi import status as http_status
 from pydantic import BaseModel, Field, validator
 from datetime import datetime
@@ -8,6 +8,8 @@ import hashlib
 import json
 import re
 import time
+import logging
+import uuid
 
 from backend.app.core.supabase import get_supabase
 from backend.app.core.auth import (
@@ -22,8 +24,10 @@ from backend.app.services.openai_service import (
     RateLimitError,
     TokenLimitError
 )
+from backend.app.services.policy_parser import PolicyParser
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 class AnalysisSource(str, Enum):
     SLACK = "slack"
@@ -149,7 +153,7 @@ async def analyze_content(
         created_violations = []
         for violation in violations:
             violation_data = {
-                "id": f"violation_{datetime.now().timestamp()}_{len(created_violations)}",
+                "id": str(uuid.uuid4()),
                 "team_id": current_user["team_id"],
                 "policy_rule_id": violation.policy_rule_id,
                 "source": analysis_request.source.value,
@@ -668,4 +672,108 @@ async def parse_policy_document_endpoint(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to parse policy document: {str(e)}"
+        )
+
+# Document Upload and Parsing Models
+class DocumentUploadRequest(BaseModel):
+    document_name: Optional[str] = None
+    document_type: Optional[str] = None
+    compliance_framework: Optional[str] = "general"
+
+class DocumentUploadResponse(BaseModel):
+    success: bool
+    document_info: Optional[Dict[str, Any]] = None
+    text_analysis: Optional[Dict[str, Any]] = None
+    extracted_rules: Optional[List[Dict[str, Any]]] = None
+    compliance_analysis: Optional[Dict[str, Any]] = None
+    processing_metadata: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    stage: Optional[str] = None
+
+@router.post("/upload-document", response_model=DocumentUploadResponse)
+async def upload_and_parse_document(
+    request: Request,
+    file: UploadFile = File(...),
+    document_name: Optional[str] = Form(None),
+    document_type: Optional[str] = Form(None),
+    compliance_framework: Optional[str] = Form("general"),
+    current_user: dict = Depends(require_read),
+    supabase = Depends(get_supabase)
+):
+    """
+    Upload and parse a policy document file (PDF, DOCX, TXT)
+    """
+    start_time = time.time()
+    
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Initialize policy parser
+        policy_parser = PolicyParser()
+        
+        # Ensure filename is not None
+        filename = file.filename or "unknown_file"
+        
+        # Parse document
+        result = await policy_parser.parse_policy_document_file(
+            file_content,
+            filename,
+            document_name,
+            document_type
+        )
+        
+        # If parsing failed, return error
+        if not result['success']:
+            return DocumentUploadResponse(
+                success=False,
+                error=result['error'],
+                stage=result.get('stage', 'unknown')
+            )
+        
+        # If compliance framework is specified, perform compliance analysis
+        if compliance_framework and compliance_framework != "general":
+            compliance_result = await policy_parser.analyze_document_compliance(
+                file_content,
+                filename,
+                compliance_framework
+            )
+            
+            if compliance_result['success']:
+                result = compliance_result
+        
+        # Log document upload and parsing event
+        await log_auth_event(
+            supabase,
+            current_user["id"],
+            current_user["team_id"],
+            "document_uploaded_and_parsed",
+            request.client.host if request.client else None,
+            request.headers.get("user-agent"),
+            {
+                "filename": file.filename,
+                "document_name": document_name,
+                "document_type": document_type,
+                "file_size": len(file_content),
+                "compliance_framework": compliance_framework,
+                "rules_extracted": len(result.get('extracted_rules', [])),
+                "processing_time_ms": int((time.time() - start_time) * 1000)
+            }
+        )
+        
+        return DocumentUploadResponse(
+            success=True,
+            document_info=result.get('document_info'),
+            text_analysis=result.get('text_analysis'),
+            extracted_rules=result.get('extracted_rules'),
+            compliance_analysis=result.get('compliance_analysis'),
+            processing_metadata=result.get('processing_metadata')
+        )
+        
+    except Exception as e:
+        logger.error(f"Document upload error: {e}")
+        return DocumentUploadResponse(
+            success=False,
+            error=str(e),
+            stage="upload_processing"
         ) 

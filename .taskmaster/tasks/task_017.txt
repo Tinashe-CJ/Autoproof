@@ -1,0 +1,53 @@
+# Task ID: 17
+# Title: Implement Rule Configuration Interface
+# Status: pending
+# Dependencies: 14, 15, 16
+# Priority: high
+# Description: Create an admin interface for reviewing and editing parsed policy rules with activation/deactivation functionality.
+# Details:
+Develop a rule configuration interface with the following features:
+
+1. Rule Listing Page:
+   - Create React component for /dashboard/policies route
+   - Implement data fetching with React Query 5.0+
+   - Display rules in a sortable, filterable table
+   - Show key information: name, description, severity, status
+   - Add pagination for large rule sets (20 per page)
+
+2. Rule Editing:
+   - Create modal or dedicated page for rule editing
+   - Implement form with validation using React Hook Form 7.45+
+   - Fields: name, description, keywords (tag input), conditions (JSON editor), severity (dropdown)
+   - Add syntax highlighting for JSON fields using react-json-view or similar
+
+3. Rule Activation Controls:
+   - Add toggle switch for rule activation/deactivation
+   - Implement batch operations for multiple rules
+   - Show visual indicators for active/inactive rules
+
+4. Custom Rule Creation:
+   - Add "Create Rule" button and form
+   - Implement guided creation process
+   - Provide templates for common rule types
+
+5. Rule Validation:
+   - Client-side validation for required fields
+   - Server-side validation before saving
+   - Show validation errors inline
+
+6. Backend API:
+   - Create CRUD endpoints for policy rules
+   - Implement proper authorization checks
+   - Add validation middleware
+
+Ensure the interface is responsive and follows the design principles outlined in the PRD.
+
+# Test Strategy:
+1. Test rule listing with various filter and sort combinations
+2. Verify rule editing functionality saves correctly
+3. Test activation/deactivation toggle
+4. Validate custom rule creation process
+5. Test form validation for various input scenarios
+6. Verify batch operations work correctly
+7. Test API endpoints with valid and invalid data
+8. Ensure proper error handling and user feedback

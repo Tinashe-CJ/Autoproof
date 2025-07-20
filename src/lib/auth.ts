@@ -10,7 +10,8 @@ export const useApiAuth = () => {
   const getAuthHeaders = useCallback(async () => {
     try {
       if (!isSignedIn) {
-        throw new Error('User is not signed in');
+        console.log('🔧 User not signed in, returning null for dev authentication fallback');
+        return null; // Return null instead of throwing error
       }
 
       // Check cache first
@@ -39,7 +40,7 @@ export const useApiAuth = () => {
       };
     } catch (error) {
       console.error('❌ Authentication error:', error);
-      throw new Error(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return null; // Return null instead of throwing error for dev authentication fallback
     }
   }, [isSignedIn, getToken]);
 

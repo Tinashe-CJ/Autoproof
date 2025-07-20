@@ -1,213 +1,333 @@
 {
 	"meta": {
-		"generatedAt": "2025-07-19T11:20:59.003Z",
-		"tasksAnalyzed": 25,
-		"totalTasks": 25,
-		"analysisCount": 25,
+		"generatedAt": "2025-07-19T15:53:05.198Z",
+		"tasksAnalyzed": 15,
+		"totalTasks": 15,
+		"analysisCount": 40,
 		"thresholdScore": 5,
 		"projectName": "Taskmaster",
 		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 1,
-			"taskTitle": "Setup Project Repository and Infrastructure",
-			"complexityScore": 7,
-			"recommendedSubtasks": 9,
-			"expansionPrompt": "Break down the setup of the project repository and infrastructure into subtasks for each major configuration step (e.g., repository creation, frontend setup, backend setup, Docker configuration, CI/CD pipeline, linting/formatting, README, environment variable management, and project structure initialization). For each, specify the tools, standards, and verification steps required.",
-			"reasoning": "This task covers multiple foundational activities across both frontend and backend, including environment setup, CI/CD, and code quality tools. Each step is distinct and requires specialized knowledge, but the overall process is well-understood in modern software engineering. Complexity is moderate-high due to the breadth and the need for cross-stack consistency, but not extreme since each step follows established patterns."
-		},
-		{
-			"taskId": 18,
-			"taskTitle": "Data Protection and Privacy Features",
+			"taskId": 28,
+			"taskTitle": "Build GitHub Integration for Code Compliance",
 			"complexityScore": 9,
-			"recommendedSubtasks": 12,
-			"expansionPrompt": "Expand each privacy and data protection requirement into a subtask, covering encryption, TLS, PII detection, retention, export, deletion, consent, documentation, processing records, access logs, breach notification, and geographic controls. For each, specify the regulatory standards (GDPR, CCPA), technical implementation details, and validation methods.",
-			"reasoning": "This task is highly complex due to the intersection of technical, legal, and operational requirements. Each feature (encryption, consent, export, deletion, etc.) is a significant effort on its own, often requiring cross-team collaboration and ongoing compliance validation. Industry best practices demand granular subtasks for each compliance area, as mistakes can have severe legal and reputational consequences."
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Decompose the GitHub Integration into subtasks for: GitHub App and webhook setup, webhook security, diff extraction and analysis, compliance engine integration, GitHub Checks API integration, PR blocking logic, review suggestion automation, queue-based processing, and error/retry handling. Include subtasks for test automation and scaling.",
+			"reasoning": "This task involves secure webhook handling, real-time code analysis, integration with GitHub APIs, and automated PR workflows. Queue-based processing and robust error handling are essential for reliability. Each component (webhook, analysis, reporting, blocking) is complex and must be isolated for maintainability and scalability."
 		},
 		{
-			"taskId": 22,
-			"taskTitle": "Documentation System Implementation",
-			"complexityScore": 6,
-			"recommendedSubtasks": 12,
-			"expansionPrompt": "List subtasks for each documentation deliverable: API docs, playground, user guides, contextual help, developer docs, code examples, versioning, troubleshooting, video tutorials, feedback, changelog, and search. For each, specify the documentation tools, integration points, and review/approval process.",
-			"reasoning": "Comprehensive documentation is essential but follows repeatable patterns using established tools (OpenAPI, Markdown, static site generators, etc.). The main complexity comes from the breadth of documentation types and the need for ongoing updates, but each subtask is relatively well-scoped and can be handled in parallel."
-		},
-		{
-			"taskId": 17,
-			"taskTitle": "Accessibility Compliance Implementation",
-			"complexityScore": 7,
-			"recommendedSubtasks": 12,
-			"expansionPrompt": "Expand into subtasks for each WCAG 2.1 AA requirement: audit, semantic HTML, ARIA, color contrast, keyboard navigation, screen reader support, focus management, skip links, text alternatives, accessible forms, responsive design, and CI/CD testing. For each, specify the tools (axe, Lighthouse), testing methods, and remediation steps.",
-			"reasoning": "Accessibility compliance is a specialized area requiring detailed attention to UI/UX, code, and testing. Each WCAG guideline maps to a concrete engineering or design subtask. Complexity is moderate-high due to the need for specialized testing and remediation, but industry standards and tooling provide clear guidance."
-		},
-		{
-			"taskId": 16,
-			"taskTitle": "Analytics and Metrics Implementation",
+			"taskId": 29,
+			"taskTitle": "Implement PDF Processing Service",
 			"complexityScore": 8,
-			"recommendedSubtasks": 12,
-			"expansionPrompt": "Break down analytics implementation into subtasks for each metric or dashboard: engagement, feature adoption, session/page monitoring, retention, business metrics, API performance, error tracking, DB monitoring, third-party latency, policy analytics, false positive tracking, and integration health. For each, specify data sources, instrumentation, storage, visualization, and alerting requirements.",
-			"reasoning": "Analytics spans both product and technical domains, requiring instrumentation across the stack, data warehousing, and dashboarding. Each metric or dashboard is a significant subtask, often involving integration with third-party tools and custom reporting. Complexity is high due to the breadth and the need for reliable, actionable insights."
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Expand the PDF Processing Service into subtasks for: text extraction (PyPDF2, pdfminer.six), OCR integration, structure preservation, error handling, file validation, performance optimization (streaming/caching), document type detection, and modular architecture setup. Include subtasks for test coverage and extensibility.",
+			"reasoning": "Robust PDF processing requires handling diverse document types, integrating multiple extraction engines, preserving structure, and ensuring performance at scale. Error handling and extensibility are critical for future-proofing. Each feature (extraction, OCR, validation, optimization) is a significant technical challenge."
 		},
 		{
-			"taskId": 14,
-			"taskTitle": "User Onboarding Flow Implementation",
+			"taskId": 30,
+			"taskTitle": "Develop Enhanced Analysis API",
+			"complexityScore": 8,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Break down the Enhanced Analysis API into subtasks for: endpoint design, input validation, file and batch handling, context-aware routing, AI compliance engine integration, confidence scoring, structured output/reporting, error handling, and dependency injection setup. Include subtasks for security and performance testing.",
+			"reasoning": "This API must handle diverse input types, integrate with AI models, maintain context, and provide detailed, actionable outputs. Ensuring robust validation, error handling, and scalability is complex, especially with batch and file processing. Industry standards require modular, well-tested, and secure API design."
+		},
+		{
+			"taskId": 31,
+			"taskTitle": "Implement Document Storage and Management System",
 			"complexityScore": 7,
-			"recommendedSubtasks": 11,
-			"expansionPrompt": "Expand into subtasks for each onboarding step: wizard UI, team management, policy setup, integration tutorials, sample policies, product tours, progress tracking, onboarding emails, invitations, contextual help, and analytics. For each, specify UX requirements, backend support, and validation criteria.",
-			"reasoning": "Onboarding is a cross-functional effort involving frontend, backend, integrations, and UX. Each step is a discrete feature, but the overall flow must be cohesive and user-friendly. Complexity is moderate-high due to the need for seamless integration and user guidance."
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Expand the Document Storage and Management System into subtasks for: secure file storage (S3 integration), signed URL generation, file integrity checks, metadata schema design, retention policy engine, access control implementation, audit logging, and background job setup for cleanup. Include subtasks for security and compliance validation.",
+			"reasoning": "Secure document storage with retention, access control, and audit logging involves integrating cloud storage, designing robust schemas, and implementing background processing. Each feature (storage, retention, access, logging) is a distinct concern requiring careful implementation and testing."
+		},
+		{
+			"taskId": 32,
+			"taskTitle": "Build Asynchronous Processing Pipeline",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Decompose the Asynchronous Processing Pipeline into subtasks for: job queue setup (Celery/Redis), task prioritization, dead letter queue, progress tracking (WebSocket server), client subscription, error/retry logic, scaling strategies, and monitoring/observability. Include subtasks for load and failure testing.",
+			"reasoning": "Building a scalable, reliable async pipeline requires expertise in distributed systems, real-time communication, error handling, and monitoring. Each component (queue, tracking, scaling, monitoring) is complex and must be robustly implemented for production readiness."
+		},
+		{
+			"taskId": 33,
+			"taskTitle": "Implement Usage Tracking and Billing System",
+			"complexityScore": 8,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Expand the Usage Tracking and Billing System into subtasks for: usage metering, pricing tier logic, overage calculation, cost attribution, alert system, reporting/analytics, export functionality, time-series database integration, and test automation. Include subtasks for data accuracy and performance validation.",
+			"reasoning": "Accurate usage tracking and billing require real-time metering, complex pricing logic, alerting, and robust reporting. Integration with time-series databases and ensuring data integrity at scale are non-trivial. Each feature (metering, billing, alerts, reporting) is a significant technical area."
+		},
+		{
+			"taskId": 34,
+			"taskTitle": "Develop Enhanced Violations Feed",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break down the Enhanced Violations Feed into subtasks for: violations data API, source indicator system, page-level PDF details, bulk action implementation, advanced filtering, UI/UX design (React), and state management setup. Include subtasks for accessibility and performance testing.",
+			"reasoning": "Building a responsive, feature-rich dashboard with advanced filtering, bulk actions, and source-specific details requires careful API and frontend design. Each feature (API, filtering, bulk actions, UI) is a distinct subtask, and accessibility/performance are critical for usability."
+		},
+		{
+			"taskId": 35,
+			"taskTitle": "Build Upgraded Analyze Playground",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Expand the Analyze Playground into subtasks for: drag-and-drop upload, file validation, real-time status indicators, document preview (PDF.js integration), results visualization, interactive navigation, export functionality, and error handling. Include subtasks for usability and performance testing.",
+			"reasoning": "This task combines advanced frontend features (drag-and-drop, real-time updates, PDF rendering, interactive visualization) with robust error handling and export capabilities. Each component is a significant UI/UX and technical challenge."
+		},
+		{
+			"taskId": 36,
+			"taskTitle": "Implement Enhanced Usage Dashboard",
+			"complexityScore": 6,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Decompose the Enhanced Usage Dashboard into subtasks for: data visualization component setup, file processing statistics, cost breakdown charts, performance metrics display, export/reporting functionality, responsive design, and state management. Include subtasks for data validation and visual regression testing.",
+			"reasoning": "While this dashboard is feature-rich, it leverages established frontend libraries and patterns. The main complexity lies in integrating diverse data sources, ensuring responsive design, and providing interactive visualizations. Each visualization and export/reporting feature is a logical subtask."
+		},
+		{
+			"taskId": 37,
+			"taskTitle": "Develop REST API for Document Management",
+			"complexityScore": 8,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Break down the REST API for Document Management into subtasks for: file upload endpoints, document management endpoints, OpenAPI documentation, authentication/authorization, rate limiting/quotas, input validation, error handling, API client SDKs, and comprehensive testing. Include subtasks for security and contract validation.",
+			"reasoning": "A comprehensive REST API with secure file handling, robust authentication, rate limiting, and detailed documentation is complex. Each endpoint group, security feature, and documentation/testing requirement is a substantial subtask."
+		},
+		{
+			"taskId": 38,
+			"taskTitle": "Implement Webhook Notification System",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Expand the Webhook Notification System into subtasks for: webhook configuration management, event type implementation, delivery/retry mechanism, security features (signing, validation), webhook testing tools, logging/monitoring, and error handling. Include subtasks for scalability and reliability testing.",
+			"reasoning": "Webhook systems require secure, reliable delivery, flexible configuration, and robust error/retry handling. Each feature (configuration, delivery, security, testing) is a distinct technical area, and reliability/scalability are critical for production use."
+		},
+		{
+			"taskId": 39,
+			"taskTitle": "Implement Security and Compliance Features",
+			"complexityScore": 9,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Decompose Security and Compliance Features into subtasks for: encrypted storage implementation, key management, encryption in transit, malicious file detection, file type verification, sandboxed processing, audit logging, privacy controls (PII detection/redaction), compliance validation, and vulnerability testing.",
+			"reasoning": "This task covers multiple advanced security domains: encryption, malware detection, sandboxing, audit logging, and privacy controls. Each area requires specialized knowledge, careful implementation, and rigorous testing to meet industry standards and compliance requirements."
+		},
+		{
+			"taskId": 40,
+			"taskTitle": "Develop System Monitoring and Performance Optimization",
+			"complexityScore": 7,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down System Monitoring and Performance Optimization into subtasks for: metrics collection (Prometheus/Grafana), alerting system setup, performance optimization (caching, query tuning), scaling strategies, logging/tracing (OpenTelemetry), log aggregation/search, health checks, and system benchmarking.",
+			"reasoning": "Comprehensive monitoring and optimization require integrating observability tools, designing alerting and scaling strategies, and optimizing performance at multiple layers. Each component (metrics, alerting, optimization, logging) is a significant technical subtask."
+		},
+		{
+			"taskId": 1,
+			"taskTitle": "Project Repository & Environment Setup",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down the setup into: monorepo scaffolding, frontend environment config, backend environment config, Docker Compose setup, CI/CD pipeline config, secrets and environment variable management, code quality tooling (Prettier, ESLint, Husky), and initial app scaffolding for both frontend and backend.",
+			"reasoning": "This task involves multi-language environment setup, monorepo management, CI/CD, secrets management, and integration of several third-party services. Each area requires specialized configuration and validation, making the overall complexity high and best managed by splitting into focused subtasks."
 		},
 		{
 			"taskId": 2,
 			"taskTitle": "Database Schema Implementation",
-			"complexityScore": 8,
-			"recommendedSubtasks": 10,
-			"expansionPrompt": "List subtasks for each schema activity: Supabase setup, core tables, additional tables, indexing, constraints, RLS policies, migrations, seed data, backup/restore, and ERD documentation. For each, specify schema standards, migration tools, and validation steps.",
-			"reasoning": "Database schema design is foundational and impacts all downstream systems. Each aspect (tables, constraints, security, migrations, documentation) is a significant subtask. Complexity is high due to the need for correctness, performance, and security, especially in a multi-tenant environment."
-		},
-		{
-			"taskId": 8,
-			"taskTitle": "Slack Integration Implementation",
-			"complexityScore": 9,
-			"recommendedSubtasks": 13,
-			"expansionPrompt": "Expand into subtasks for each integration step: Slack app creation, OAuth, event subscriptions, webhook handler, message processing, real-time detection, notifications, permissions, slash commands, recommendations, bot responses, filtering/rate limiting, and performance monitoring. For each, specify Slack API usage, security, and latency requirements.",
-			"reasoning": "Slack integration is highly complex due to real-time requirements, security, permissions, and the need to handle a variety of Slack APIs and workflows. Each step is a substantial engineering effort, and the system must be robust, secure, and performant under strict SLAs."
-		},
-		{
-			"taskId": 4,
-			"taskTitle": "Core API Endpoints Implementation",
-			"complexityScore": 8,
-			"recommendedSubtasks": 10,
-			"expansionPrompt": "Break down into subtasks for API structure, each endpoint, request validation, error handling, rate limiting, logging, pagination, filtering/sorting, documentation, and CORS. For each, specify FastAPI best practices, Pydantic models, and test coverage requirements.",
-			"reasoning": "Implementing a robust API layer involves multiple cross-cutting concerns (validation, error handling, rate limiting, documentation). Each endpoint and feature is a discrete subtask, and the overall system must be secure, performant, and well-documented. Complexity is high due to the breadth and need for quality."
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand into: schema design (ERD), Alembic migration setup, implementation of each core table (policy_rules, violation_logs, teams, users, API keys, billing/usage), referential integrity enforcement, sensitive data encryption, and migration testing.",
+			"reasoning": "Multiple interrelated tables, referential integrity, encryption, and migration tooling are involved. Each table and concern (e.g., encryption, migrations) warrants a dedicated subtask for clarity and maintainability."
 		},
 		{
 			"taskId": 3,
-			"taskTitle": "Authentication and Authorization System",
-			"complexityScore": 9,
-			"recommendedSubtasks": 11,
-			"expansionPrompt": "Expand into subtasks for Clerk setup, authentication flow, MFA, RBAC, JWT, middleware, API keys, key rotation, audit logging, session management, RBAC matrix, and profile management. For each, specify security standards, integration points, and test scenarios.",
-			"reasoning": "Authentication and authorization are critical for security and compliance. Each feature (MFA, RBAC, API keys, audit logging) is a significant engineering effort, and the system must be robust against attacks and compliant with best practices. Complexity is very high due to the security implications and breadth."
+			"taskTitle": "Clerk Authentication & JWT Middleware",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: frontend Clerk integration, backend JWT middleware, protected endpoint enforcement, user/team DB mapping on login, and session expiration/refresh logic.",
+			"reasoning": "Integrating third-party auth across frontend and backend, secure JWT validation, and session management are each non-trivial and require careful, isolated implementation and testing."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Policy Document Parsing API (GPT-4 Integration)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Split into: file upload handling, PDF/TXT/JSON extraction, GPT-4 prompt engineering, OpenAI API integration with retry/backoff, output schema validation, DB storage logic, and accuracy testing with sample docs.",
+			"reasoning": "Combines file parsing, LLM integration, prompt engineering, error handling, and accuracy validation. Each step is complex and error-prone, requiring focused attention."
 		},
 		{
 			"taskId": 5,
-			"taskTitle": "OpenAI Integration for Policy Analysis",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on openai integration for policy analysis.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Rule Configuration & Management UI",
+			"complexityScore": 6,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break into: UI scaffolding, editable table implementation, inline editing and validation, activation/deactivation logic, custom rule creation modal, and accessibility compliance.",
+			"reasoning": "Building a robust, accessible, and interactive admin UI with validation and REST integration involves several distinct UI and logic layers."
 		},
 		{
 			"taskId": 6,
-			"taskTitle": "Policy Document Parsing Implementation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on policy document parsing implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Slack & GitHub Webhook Integrations",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Expand into: Slack webhook endpoint, GitHub webhook endpoint, signature verification logic, event parsing for each platform, job enqueueing for async analysis, and audit logging.",
+			"reasoning": "Securely handling webhooks from two platforms, parsing events, and integrating async job processing each introduce complexity and security considerations."
 		},
 		{
 			"taskId": 7,
-			"taskTitle": "Custom Rule Creation Interface",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on custom rule creation interface.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Compliance Analysis Engine (Text & File APIs)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Divide into: text analysis endpoint, file analysis endpoint, GPT-4 prompt templates, PDF extraction, quota enforcement, audit logging, and performance optimization for <2s response.",
+			"reasoning": "Requires high-performance, scalable API design, LLM integration, quota management, and audit logging, each of which is a significant engineering concern."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Violation Feed & Resolution Dashboard",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break into: backend violations API, frontend UI with virtualized list, filtering and pagination, resolution action implementation, and CSV export functionality.",
+			"reasoning": "Building a performant, filterable, and accessible dashboard with backend integration and export features involves several distinct UI and API layers."
 		},
 		{
 			"taskId": 9,
-			"taskTitle": "GitHub Integration Implementation",
+			"taskTitle": "Interactive Analysis Playground",
 			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on github integration implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Expand into: UI scaffolding with file/text input, API integration for analysis, real-time results display with loading states, and saving results to violation logs.",
+			"reasoning": "While interactive, this UI is less complex than the admin dashboards, but still involves real-time feedback, file handling, and backend integration."
 		},
 		{
 			"taskId": 10,
-			"taskTitle": "Text Analysis API Implementation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on text analysis api implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Usage & Billing Dashboard Integration",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divide into: backend usage/billing endpoints, Stripe API integration, frontend dashboard UI, warning/threshold logic, and secure data handling.",
+			"reasoning": "Combines backend tracking, third-party billing integration, and secure, real-time UI updates, each requiring careful implementation."
 		},
 		{
 			"taskId": 11,
-			"taskTitle": "Violations Dashboard Frontend Implementation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on violations dashboard frontend implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "API Key Management Module",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break into: backend API key endpoints (CRUD), secure key generation and storage, rate limiting logic, frontend UI for key management, and usage tracking.",
+			"reasoning": "Secure key lifecycle management, rate limiting, and usage tracking are each critical and require isolated, testable implementation."
 		},
 		{
 			"taskId": 12,
-			"taskTitle": "Usage Monitoring Implementation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on usage monitoring implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Security, Monitoring, and Backup Automation",
+			"complexityScore": 8,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Expand into: input validation (Pydantic), rate limiting, encryption (at rest/in transit), health checks and uptime monitoring, automated DB backups, audit logging, and error monitoring integration.",
+			"reasoning": "This task covers multiple cross-cutting concerns (security, monitoring, backups) that each require specialized implementation and validation to meet industry standards."
 		},
 		{
 			"taskId": 13,
-			"taskTitle": "Payment Processing with Stripe Integration",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on payment processing with stripe integration.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Setup Project Infrastructure and Environment",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down the setup of project infrastructure into subtasks for each major area: (1) Frontend scaffolding and configuration (React, Vite, Tailwind, ESLint, Prettier, Router), (2) Backend scaffolding and configuration (FastAPI, virtualenv, SQLAlchemy, Pydantic, CORS), (3) Database provisioning and migration setup (Supabase, pooling, migrations), (4) Authentication provider integration (Clerk setup for both frontend and backend), (5) CI/CD pipeline configuration (GitHub Actions for lint, test, build, deploy), (6) Environment variable management (.env.example, loading in both apps), (7) Monorepo structure and tooling, (8) Initial documentation and developer onboarding.",
+			"reasoning": "This task involves initializing a modern full-stack monorepo with multiple frameworks, CI/CD, authentication, and cloud database integration. Each area requires specialized setup and cross-cutting configuration, making the overall complexity high. Industry best practices recommend modularizing each setup area to reduce risk and improve maintainability."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Implement Core Database Models",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Expand this task into subtasks for: (1) Teams model and migration, (2) PolicyRule model and migration, (3) ViolationLog model and migration, (4) API Keys model and migration, (5) Usage Logs model and migration, (6) SQLAlchemy relationships and type hints, (7) Alembic migration scripts and testing.",
+			"reasoning": "Defining and migrating multiple interrelated database models with proper constraints, relationships, and migrations is moderately complex. Each table and its relationships should be handled as a separate subtask to ensure correctness and testability, following best practices for database-first development."
 		},
 		{
 			"taskId": 15,
-			"taskTitle": "Error Handling and Monitoring System",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on error handling and monitoring system.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement Authentication with Clerk",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Decompose authentication into: (1) Frontend Clerk integration and UI components, (2) Backend Clerk SDK and JWT middleware, (3) Webhook event handling, (4) User-to-team association logic, (5) Team invitation and management, (6) Session management and persistence, (7) Role-based authorization (backend and frontend), (8) Error handling and secure logout.",
+			"reasoning": "Authentication and authorization touch both frontend and backend, require secure handling of tokens, webhooks, and user management, and must be robust against security threats. Each area is a significant concern and should be isolated for clarity and security."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Implement Policy Document Parsing Service",
+			"complexityScore": 9,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Expand into: (1) Document upload API and validation, (2) PDF text extraction, (3) TXT and JSON parsing, (4) GPT-4 prompt engineering, (5) GPT-4 API integration, (6) Response parsing and validation, (7) Database storage of rules, (8) Error handling and retries, (9) Performance optimizations (chunking, caching, background tasks).",
+			"reasoning": "This task combines file handling, AI integration, schema validation, and performance optimization. Each step is non-trivial and error-prone, especially with external APIs and large files, requiring careful separation for reliability and maintainability."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Implement Rule Configuration Interface",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down into: (1) Rule listing UI, (2) Data fetching and state management, (3) Rule editing UI and validation, (4) Activation/deactivation controls, (5) Custom rule creation flow, (6) Client/server validation, (7) Backend CRUD endpoints and authorization, (8) Responsive design and accessibility.",
+			"reasoning": "Building a robust admin interface with real-time editing, validation, and batch operations is complex. Each UI and backend concern should be a subtask to ensure modularity and test coverage, following modern frontend/backend separation patterns."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Implement Slack Integration",
+			"complexityScore": 9,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Expand into: (1) Slack app creation and OAuth scopes, (2) OAuth flow and token storage, (3) Webhook endpoint and signature verification, (4) Event processing and filtering, (5) Message analysis integration, (6) Alert DM formatting and delivery, (7) Channel configuration UI and backend, (8) Rate limiting and quota enforcement, (9) Error handling and monitoring.",
+			"reasoning": "Slack integration involves real-time event handling, OAuth, secure webhooks, and tight latency requirements. Each area is a potential point of failure and should be isolated for security, maintainability, and compliance with Slack's best practices."
 		},
 		{
 			"taskId": 19,
-			"taskTitle": "Performance Optimization",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on performance optimization.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement GitHub Integration",
+			"complexityScore": 9,
+			"recommendedSubtasks": 9,
+			"expansionPrompt": "Decompose into: (1) GitHub app creation and permissions, (2) Installation flow and token management, (3) Webhook endpoint and signature verification, (4) Commit analysis logic, (5) Pull request analysis and check runs, (6) Repository configuration UI and backend, (7) Violation reporting and PR comments, (8) Merge blocking logic, (9) Error handling and monitoring.",
+			"reasoning": "GitHub integration is complex due to OAuth, webhooks, asynchronous event processing, and the need to block merges in real time. Each integration point should be a subtask to ensure reliability and compliance with GitHub's security and performance standards."
 		},
 		{
 			"taskId": 20,
-			"taskTitle": "Deployment Pipeline Implementation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on deployment pipeline implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement Text Analysis API",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Expand into: (1) API endpoint and request validation, (2) Authentication and rate limiting, (3) GPT-4 prompt engineering, (4) GPT-4 API integration, (5) Rule matching and serialization, (6) Response parsing and filtering, (7) Performance optimizations (caching, async), (8) Usage tracking and logging.",
+			"reasoning": "This is a core backend service involving AI integration, schema validation, performance optimization, and usage tracking. Each area is critical for reliability and should be handled as a separate subtask for clarity and maintainability."
 		},
 		{
 			"taskId": 21,
-			"taskTitle": "Comprehensive Testing Implementation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on comprehensive testing implementation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement File Upload Analysis",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break down into: (1) File upload API and validation, (2) PDF text extraction and error handling, (3) Text chunking and processing, (4) Result merging and deduplication, (5) Response formatting with metadata, (6) Performance optimizations (background processing, caching), (7) Frontend integration and UX.",
+			"reasoning": "File upload and analysis involves multiple steps—file handling, extraction, chunking, and frontend integration. Each step can fail independently and should be isolated for robust error handling and maintainability."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Implement Violations Feed Dashboard",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Expand into: (1) Violations table UI, (2) Filtering and sorting controls, (3) Pagination and infinite scroll, (4) Data fetching and caching, (5) Violation details and expandable rows, (6) Resolution marking and batch operations, (7) CSV export and download, (8) Real-time updates and notifications.",
+			"reasoning": "A real-time, filterable dashboard with batch operations and export is a moderately high-complexity frontend task. Each feature area should be a subtask to ensure modularity, testability, and responsiveness."
 		},
 		{
 			"taskId": 23,
-			"taskTitle": "Security Hardening and Penetration Testing",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on security hardening and penetration testing.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement Interactive Analysis Playground",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break down into: (1) Playground UI and tabbed interface, (2) Text analysis integration, (3) File upload and analysis integration, (4) Results display and grouping, (5) Save to violations feed, (6) History and local storage, (7) Error handling and responsive design.",
+			"reasoning": "This feature combines multiple UI modes, backend integrations, and state management. Each area is distinct and should be handled separately to ensure a smooth, intuitive user experience."
 		},
 		{
 			"taskId": 24,
-			"taskTitle": "Scalability Testing and Optimization",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on scalability testing and optimization.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement Usage & Billing Dashboard",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Expand into: (1) Usage dashboard UI, (2) Usage statistics API and backend, (3) Subscription details API and UI, (4) Stripe integration and webhook handling, (5) Overage handling and alerts, (6) Usage breakdown and reporting, (7) Error handling and caching.",
+			"reasoning": "Combining usage tracking, billing, and Stripe integration is moderately complex. Each area involves different systems and should be modularized for maintainability and security."
 		},
 		{
 			"taskId": 25,
-			"taskTitle": "Launch Readiness and Go-Live Preparation",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Break down this task with a focus on launch readiness and go-live preparation.",
-			"reasoning": "Automatically added due to missing analysis in AI response."
+			"taskTitle": "Implement API Key Management",
+			"complexityScore": 7,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Break down into: (1) API key management UI, (2) Key generation endpoint and logic, (3) Key listing and metadata, (4) Key revocation and soft deletion, (5) Usage tracking and rate limiting, (6) Security measures (rotation, expiration, IP restriction), (7) Error handling and confirmation flows.",
+			"reasoning": "API key management involves secure key generation, storage, revocation, and usage tracking. Each area is critical for security and should be handled as a separate subtask to minimize risk."
+		},
+		{
+			"taskId": 26,
+			"taskTitle": "Implement Onboarding Flow and User Experience",
+			"complexityScore": 9,
+			"recommendedSubtasks": 10,
+			"expansionPrompt": "Expand into: (1) Signup and welcome UI, (2) Progress tracker and persistent state, (3) Compliance framework selection, (4) Policy document upload and parsing, (5) Integration setup guides (Slack, GitHub), (6) Team configuration and invitations, (7) First analysis guidance, (8) Manual rule adjustment, (9) Notification and monitoring setup, (10) Responsive design and accessibility.",
+			"reasoning": "A comprehensive onboarding flow spans multiple systems, integrations, and user journeys. Each step is critical for user success and should be modularized for clarity, testability, and to support iterative improvements."
+		},
+		{
+			"taskId": 27,
+			"taskTitle": "Implement Performance Optimization and Monitoring",
+			"complexityScore": 8,
+			"recommendedSubtasks": 8,
+			"expansionPrompt": "Break down into: (1) Backend performance optimization, (2) Frontend performance optimization, (3) API performance improvements, (4) Monitoring setup (logging, metrics), (5) Alerting system configuration, (6) Performance testing and benchmarking, (7) Health checks and uptime monitoring, (8) Error tracking and recovery.",
+			"reasoning": "Performance and monitoring require coordinated changes across backend, frontend, infrastructure, and alerting. Each area is a discipline in itself and should be handled as a separate subtask to ensure reliability and meet SLAs."
 		}
 	]
 }

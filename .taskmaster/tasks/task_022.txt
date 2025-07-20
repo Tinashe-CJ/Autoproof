@@ -1,0 +1,106 @@
+# Task ID: 22
+# Title: Implement Violations Feed Dashboard
+# Status: pending
+# Dependencies: 14, 15, 20
+# Priority: high
+# Description: Create a paginated view of all detected violations with filtering, resolution marking, and export functionality.
+# Details:
+Implement the Violations Feed Dashboard with the following components:
+
+1. UI Implementation:
+   - Create React component for /dashboard/violations route
+   - Implement responsive table layout using Tailwind CSS
+   - Add filtering controls for severity, source, date range
+   - Implement pagination with 20 items per page
+   - Add sorting functionality for columns
+
+2. Data Fetching:
+   - Create GET /api/violations endpoint with query parameters
+   - Implement React Query for data fetching with caching
+   - Add infinite scrolling or pagination controls
+   - Support filtering via URL parameters
+
+3. Violation Details:
+   - Show key information: timestamp, source, severity, description
+   - Add expandable rows for additional details
+   - Include recommendation text
+   - Show source context when available
+
+4. Resolution Handling:
+   - Add toggle or button to mark violations as resolved
+   - Implement batch resolution for multiple items
+   - Create PUT /api/violations/{id}/resolve endpoint
+   - Add visual indicators for resolved vs. open violations
+
+5. Export Functionality:
+   - Implement CSV export of filtered violations
+   - Create GET /api/violations/export endpoint
+   - Add download button with loading indicator
+   - Include all relevant fields in export
+
+6. Real-time Updates:
+   - Add WebSocket or polling for new violations
+   - Implement toast notifications for new items
+   - Update counts and filters automatically
+
+Ensure the interface is responsive and follows the design principles outlined in the PRD.
+
+# Test Strategy:
+1. Test data loading with various filter combinations
+2. Verify pagination works correctly
+3. Test resolution marking for individual and batch items
+4. Validate CSV export functionality
+5. Test real-time updates for new violations
+6. Verify filter persistence across page refreshes
+7. Test responsive layout on different screen sizes
+8. Validate sorting functionality for all columns
+
+# Subtasks:
+## 1. Violations Table UI Implementation [pending]
+### Dependencies: None
+### Description: Design and implement the main violations table using a responsive layout. Integrate with a UI library (e.g., MUI, Ant Design, or Tailwind CSS) to ensure accessibility and scalability.
+### Details:
+Create a React component for the /dashboard/violations route. Ensure the table supports dynamic data rendering and is visually consistent with the dashboard's design system.
+
+## 2. Filtering and Sorting Controls [pending]
+### Dependencies: 22.1
+### Description: Add filtering controls for severity, source, and date range, as well as sorting functionality for all relevant columns.
+### Details:
+Implement dropdowns, date pickers, and column header sort toggles. Ensure controls are intuitive and update the table data in real time.
+
+## 3. Pagination and Infinite Scroll [pending]
+### Dependencies: 22.1, 22.2
+### Description: Implement pagination with 20 items per page and support for infinite scroll as an alternative for large datasets.
+### Details:
+Add pagination controls below the table and/or infinite scroll logic. Ensure smooth user experience and efficient data loading.
+
+## 4. Data Fetching and Caching [pending]
+### Dependencies: 22.1, 22.2, 22.3
+### Description: Integrate data fetching from the /api/violations endpoint using React Query or a similar library, with caching and query parameter support.
+### Details:
+Ensure data is fetched efficiently, supports all filter/sort/pagination parameters, and is cached for performance. Handle loading and error states gracefully.
+
+## 5. Violation Details and Expandable Rows [pending]
+### Dependencies: 22.1, 22.4
+### Description: Enable expandable rows in the table to show detailed violation information without navigating away.
+### Details:
+Implement row expansion UI and fetch or display additional details as needed. Ensure accessibility and responsiveness.
+
+## 6. Resolution Marking and Batch Operations [pending]
+### Dependencies: 22.1, 22.4, 22.5
+### Description: Allow users to mark violations as resolved individually or in batches, with appropriate UI controls and feedback.
+### Details:
+Add checkboxes for selection, batch action buttons, and confirmation dialogs. Update backend and UI state accordingly.
+
+## 7. CSV Export and Download [pending]
+### Dependencies: 22.1, 22.2, 22.4
+### Description: Implement functionality to export the current table view (with filters applied) as a CSV file.
+### Details:
+Add an export button, generate CSV data client-side or via API, and trigger download. Ensure correct formatting and encoding.
+
+## 8. Real-time Updates and Notifications [pending]
+### Dependencies: 22.1, 22.4
+### Description: Add real-time updates for new violations and notifications for relevant events using WebSockets or polling.
+### Details:
+Integrate a real-time data source, update the table as new violations arrive, and display notifications for critical events.
+

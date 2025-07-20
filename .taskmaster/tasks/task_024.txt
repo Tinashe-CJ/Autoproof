@@ -1,0 +1,57 @@
+# Task ID: 24
+# Title: Implement Usage & Billing Dashboard
+# Status: pending
+# Dependencies: 14, 15
+# Priority: medium
+# Description: Create a dashboard displaying current usage statistics, subscription details, and billing information with Stripe integration.
+# Details:
+Implement the Usage & Billing Dashboard with the following components:
+
+1. UI Implementation:
+   - Create React component for /dashboard/usage route
+   - Design responsive layout with usage metrics and billing details
+   - Implement progress bars for usage visualization
+   - Add warning indicators for approaching limits (80%)
+
+2. Usage Statistics:
+   - Create GET /api/usage endpoint
+   - Track API calls used vs. limit
+   - Monitor token consumption metrics
+   - Calculate percentage utilization
+   - Show historical usage trends
+
+3. Subscription Details:
+   - Create GET /api/billing endpoint
+   - Display current plan information
+   - Show billing period and next payment date
+   - List included features and limits
+   - Add upgrade/downgrade options
+
+4. Stripe Integration:
+   - Implement Stripe Customer Portal integration
+   - Add direct link to manage payment methods
+   - Create webhook handler for Stripe events
+   - Process subscription changes and updates
+
+5. Overage Handling:
+   - Display overage charges if applicable
+   - Implement overage alerts and notifications
+   - Add auto-upgrade options for frequent overages
+
+6. Usage Breakdown:
+   - Show usage by integration (Slack, GitHub, API)
+   - Display usage by team member
+   - Add date range selector for historical data
+   - Create exportable usage reports
+
+Ensure proper error handling for API failures and implement caching for performance.
+
+# Test Strategy:
+1. Test usage statistics calculation and display
+2. Verify subscription details are accurate
+3. Test Stripe Customer Portal integration
+4. Validate warning indicators at threshold levels
+5. Test webhook handling for Stripe events
+6. Verify usage breakdown by different dimensions
+7. Test responsive layout on different screen sizes
+8. Validate export functionality for usage reports

@@ -5,6 +5,7 @@ from sqlalchemy.pool import QueuePool
 from config.database import get_db
 from config.settings import settings
 from auth import get_current_user
+from backend.app.core.dev_auth import get_current_user_dev
 from models.user import User
 from models.team import Team, PlanType
 from models.billing import BillingInfo
@@ -38,12 +39,24 @@ class CheckoutSessionRequest(BaseModel):
 
 @router.get("/", response_model=BillingResponse)
 async def get_billing_info(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user_dev),
     db: Session = Depends(get_db)
 ):
     """Get current billing information for user's team"""
     
-    team = db.query(Team).filter(Team.id == current_user.team_id).first()
+    # Handle both User objects and dict from dev auth
+    if isinstance(current_user, dict):
+        user_id = current_user.get("id")
+        user_email = current_user.get("email")
+        user_name = f"{current_user.get('first_name', 'User')} {current_user.get('last_name', 'Name')}"
+        team_id = current_user.get("team_id")
+    else:
+        user_id = current_user.id
+        user_email = current_user.email
+        user_name = f"{current_user.first_name} {current_user.last_name}"
+        team_id = current_user.team_id
+    
+    team = db.query(Team).filter(Team.id == team_id).first()
     if not team:
         raise HTTPException(status_code=404, detail="Team not found")
     
@@ -53,8 +66,8 @@ async def get_billing_info(
         # Create billing info if it doesn't exist
         stripe_service = StripeService()
         customer_id = await stripe_service.create_customer(
-            email=current_user.email,
-            name=f"{current_user.first_name} {current_user.last_name}",
+            email=user_email,
+            name=user_name,
             team_id=team.id
         )
         
@@ -73,8 +86,8 @@ async def get_billing_info(
         try:
             await stripe_service.update_customer(
                 billing_info.stripe_customer_id,
-                email=current_user.email,
-                name=f"{current_user.first_name} {current_user.last_name}"
+                email=user_email,
+                name=user_name
             )
         except Exception as e:
             print(f"Warning: Could not update Stripe customer: {e}")
@@ -94,15 +107,30 @@ async def get_billing_info(
     )
 
 
+@router.get("/subscription", response_model=BillingResponse)
+async def get_subscription_info(
+    current_user: dict = Depends(get_current_user_dev),
+    db: Session = Depends(get_db)
+):
+    """Get subscription information (alias for get_billing_info)"""
+    return await get_billing_info(current_user, db)
+
+
 @router.post("/upgrade")
 async def upgrade_plan(
     upgrade_request: PlanUpgradeRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user_dev),
     db: Session = Depends(get_db)
 ):
     """Upgrade or downgrade team plan"""
     
-    team = db.query(Team).filter(Team.id == current_user.team_id).first()
+    # Handle both User objects and dict from dev auth
+    if isinstance(current_user, dict):
+        team_id = current_user.get("team_id")
+    else:
+        team_id = current_user.team_id
+    
+    team = db.query(Team).filter(Team.id == team_id).first()
     billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team.id).first()
     
     if not billing_info:
@@ -145,12 +173,18 @@ async def upgrade_plan(
 
 @router.post("/portal")
 async def create_billing_portal(
-    current_user: User = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user_dev),
     db: Session = Depends(get_db)
 ):
     """Create Stripe billing portal session for self-service"""
     
-    team = db.query(Team).filter(Team.id == current_user.team_id).first()
+    # Handle both User objects and dict from dev auth
+    if isinstance(current_user, dict):
+        team_id = current_user.get("team_id")
+    else:
+        team_id = current_user.team_id
+    
+    team = db.query(Team).filter(Team.id == team_id).first()
     billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team.id).first()
     
     if not billing_info:
@@ -178,26 +212,64 @@ async def start_free_trial(
     request: Request,
     checkout_request: CheckoutSessionRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_dev)
 ):
     """Start a free trial or subscription by calling the Supabase stripe-checkout Edge Function."""
-    user_id = current_user.id
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    # Handle both User objects and dict from dev auth
+    if isinstance(current_user, dict):
+        user_id = current_user.get("id")
+        user_email = current_user.get("email")
+        user_name = f"{current_user.get('first_name', 'User')} {current_user.get('last_name', 'Name')}"
+        team_id = current_user.get("team_id")
+    else:
+        user_id = current_user.id
+        user_email = current_user.email
+        user_name = f"{current_user.first_name} {current_user.last_name}"
+        team_id = current_user.team_id
+    
+    # For dev auth, we might not have the user in the local database
+    # Let's try to find by email instead
+    if isinstance(current_user, dict):
+        user_email = current_user.get("email")
+        user = db.query(User).filter(User.email == user_email).first()
+        if not user:
+            # Create user if it doesn't exist in local database
+            user = User(
+                id=user_id,
+                email=user_email,
+                first_name=current_user.get("first_name", "User"),
+                last_name=current_user.get("last_name", "Name"),
+                team_id=team_id,
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+    else:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
     # Get team and billing info
-    team = db.query(Team).filter(Team.id == user.team_id).first()
+    team = db.query(Team).filter(Team.id == team_id).first()
     if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
+        # Create team if it doesn't exist
+        team = Team(
+            id=team_id,
+            name=f"Team for {user_email}",
+            is_active=True
+        )
+        db.add(team)
+        db.commit()
+        db.refresh(team)
     
     billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team.id).first()
     if not billing_info:
         # Create billing info if it doesn't exist
         stripe_service = StripeService()
         customer_id = await stripe_service.create_customer(
-            email=user.email,
-            name=f"{user.first_name} {user.last_name}",
+            email=user_email,
+            name=user_name,
             team_id=team.id
         )
         
@@ -242,28 +314,67 @@ async def create_checkout_session_direct(
     request: Request,
     checkout_request: CheckoutSessionRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_dev)
 ):
     """Create a Stripe Checkout session directly from the backend and return the session URL."""
     import time
     start_time = time.time()
-    user_id = current_user.id
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Handle both User objects and dict from dev auth
+    if isinstance(current_user, dict):
+        user_id = current_user.get("id")
+        user_email = current_user.get("email")
+        user_name = f"{current_user.get('first_name', 'User')} {current_user.get('last_name', 'Name')}"
+        team_id = current_user.get("team_id")
+    else:
+        user_id = current_user.id
+        user_email = current_user.email
+        user_name = f"{current_user.first_name} {current_user.last_name}"
+        team_id = current_user.team_id
+    
+    # For dev auth, we might not have the user in the local database
+    # Let's try to find by email instead
+    if isinstance(current_user, dict):
+        user_email = current_user.get("email")
+        user = db.query(User).filter(User.email == user_email).first()
+        if not user:
+            # Create user if it doesn't exist in local database
+            user = User(
+                id=user_id,
+                email=user_email,
+                first_name=current_user.get("first_name", "User"),
+                last_name=current_user.get("last_name", "Name"),
+                team_id=team_id,
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+    else:
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
 
     # Get team and billing info
-    team = db.query(Team).filter(Team.id == user.team_id).first()
+    team = db.query(Team).filter(Team.id == team_id).first()
     if not team:
-        raise HTTPException(status_code=404, detail="Team not found")
+        # Create team if it doesn't exist
+        team = Team(
+            id=team_id,
+            name=f"Team for {user_email}",
+            is_active=True
+        )
+        db.add(team)
+        db.commit()
+        db.refresh(team)
     
     billing_info = db.query(BillingInfo).filter(BillingInfo.team_id == team.id).first()
     if not billing_info:
         # Create billing info if it doesn't exist
         stripe_service = StripeService()
         customer_id = await stripe_service.create_customer(
-            email=user.email,
-            name=f"{user.first_name} {user.last_name}",
+            email=user_email,
+            name=user_name,
             team_id=team.id
         )
         

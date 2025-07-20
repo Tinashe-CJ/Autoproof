@@ -1,0 +1,56 @@
+# Task ID: 23
+# Title: Implement Interactive Analysis Playground
+# Status: pending
+# Dependencies: 20, 21
+# Priority: medium
+# Description: Create an interface for ad-hoc compliance testing with text input, source selection, and PDF upload capabilities.
+# Details:
+Implement the Interactive Analysis Playground with the following components:
+
+1. UI Implementation:
+   - Create React component for /dashboard/analyze route
+   - Implement tabbed interface for text vs. file analysis
+   - Add text area with character counter (10,000 char limit)
+   - Create source dropdown selection (slack, github, custom)
+   - Add file upload zone with drag-and-drop support
+
+2. Text Analysis:
+   - Connect text input to /api/analyze endpoint
+   - Implement debounced analysis for typing
+   - Add "Analyze" button for manual submission
+   - Show loading indicator during analysis
+
+3. File Analysis:
+   - Connect file upload to /api/analyze/file endpoint
+   - Support PDF files up to 10MB
+   - Show upload and processing progress
+   - Handle various error states
+
+4. Results Display:
+   - Create violation card components
+   - Group violations by severity
+   - Show detailed information for each violation
+   - Highlight relevant text portions when possible
+
+5. Save Functionality:
+   - Add button to save results to violations feed
+   - Implement confirmation dialog
+   - Create POST endpoint to save playground results
+   - Show success/error notifications
+
+6. History Feature:
+   - Keep track of recent analyses
+   - Allow quick loading of previous inputs
+   - Implement local storage for persistence
+
+Ensure the interface is intuitive and provides immediate feedback on analysis results.
+
+# Test Strategy:
+1. Test text analysis with various inputs and sources
+2. Verify file upload and analysis works correctly
+3. Test character limit enforcement
+4. Validate results display for different violation types
+5. Test save functionality to violations feed
+6. Verify history feature retains recent analyses
+7. Test error handling for various failure scenarios
+8. Validate responsive layout on different screen sizes

@@ -6,6 +6,10 @@ import CustomSignIn from "./components/auth/CustomSignIn";
 import CustomSignUp from "./components/auth/CustomSignUp";
 import CustomUserProfile from "./components/auth/CustomUserProfile";
 import Dashboard from "./components/dashboard/Dashboard";
+import ViolationsFeed from "./components/dashboard/ViolationsFeed";
+import PolicyManagement from "./components/dashboard/PolicyManagement";
+import AnalysisPlayground from "./components/dashboard/AnalysisPlayground";
+import ApiKeyManagement from "./components/dashboard/ApiKeyManagement";
 import SuccessPage from "./components/success/SuccessPage";
 import PricingPage from "./components/pricing/PricingPage";
 import { BillingManager } from "./components/billing";
@@ -33,6 +37,38 @@ function App() {
             } 
           />
           <Route 
+            path="/violations" 
+            element={
+              <ProtectedRoute>
+                <ViolationsFeed />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/policies" 
+            element={
+              <ProtectedRoute>
+                <PolicyManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/analyze" 
+            element={
+              <ProtectedRoute>
+                <AnalysisPlayground />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/api-keys" 
+            element={
+              <ProtectedRoute>
+                <ApiKeyManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/billing" 
             element={
               <ProtectedRoute>
@@ -48,6 +84,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+
         </Routes>
         <Toaster />
         {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
