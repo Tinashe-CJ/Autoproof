@@ -318,9 +318,35 @@ const Dashboard = () => {
                           {getSubscriptionStatus()}
                         </Badge>
                       </div>
-                      {subscription?.current_period_end && (
+                      {subscription?.current_period_end ? (
                         <p className="text-slate-500 text-xs mt-2">
-                          Renews: {new Date(subscription.current_period_end * 1000).toLocaleDateString()}
+                          Renews: {(() => {
+                            try {
+                              // Try to use the current_period_end from Stripe first
+                              const renewalDate = new Date(subscription.current_period_end * 1000);
+                              if (!isNaN(renewalDate.getTime())) {
+                                return renewalDate.toLocaleDateString();
+                              }
+                              
+                              // Fallback: calculate 30 days from now if current_period_end is invalid
+                              const fallbackDate = new Date();
+                              fallbackDate.setDate(fallbackDate.getDate() + 30);
+                              return fallbackDate.toLocaleDateString();
+                            } catch (error) {
+                              // Final fallback: 30 days from now
+                              const fallbackDate = new Date();
+                              fallbackDate.setDate(fallbackDate.getDate() + 30);
+                              return fallbackDate.toLocaleDateString();
+                            }
+                          })()}
+                        </p>
+                      ) : subscription?.status === 'active' && (
+                        <p className="text-slate-500 text-xs mt-2">
+                          Renews: {(() => {
+                            const fallbackDate = new Date();
+                            fallbackDate.setDate(fallbackDate.getDate() + 30);
+                            return fallbackDate.toLocaleDateString();
+                          })()}
                         </p>
                       )}
                     </div>
