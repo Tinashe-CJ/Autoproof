@@ -95,15 +95,21 @@ const AnalysisPlayground = () => {
     console.log('Content state:', content);
     console.log('Source state:', source);
     
-    if (!file) {
-      console.log('No file selected, showing error');
-      setError('Please select a file to upload');
-      return;
-    }
-    if (!content.trim() && !file) {
-      console.log('No content and no file, showing error');
-      setError('Please provide content to analyze');
-      return;
+    // Validation logic based on content source
+    if (source === 'manual') {
+      // For manual input, require either file OR content
+      if (!file && !content.trim()) {
+        console.log('Manual source: No file and no content, showing error');
+        setError('Please provide content to analyze or upload a file');
+        return;
+      }
+    } else {
+      // For other sources (github, slack, api), require content only
+      if (!content.trim()) {
+        console.log(`${source} source: No content provided, showing error`);
+        setError('Please provide content to analyze');
+        return;
+      }
     }
 
     console.log('Starting analysis...');
@@ -361,7 +367,13 @@ const AnalysisPlayground = () => {
                   <label className="text-sm font-medium text-slate-300 mb-2 block">
                     Content Source
                   </label>
-                  <Select value={source} onValueChange={(value: any) => setSource(value)}>
+                  <Select value={source} onValueChange={(value: any) => {
+                    setSource(value);
+                    // Clear file when switching away from manual input
+                    if (value !== 'manual') {
+                      setFile(null);
+                    }
+                  }}>
                     <SelectTrigger className="bg-slate-700/40 border-slate-600/50 text-white">
                       <SelectValue />
                     </SelectTrigger>
@@ -374,45 +386,47 @@ const AnalysisPlayground = () => {
                   </Select>
                 </div>
 
-                {/* File Upload */}
-                <div>
-                  <label className="text-sm font-medium text-slate-300 mb-2 block">
-                    Upload File (Optional)
-                  </label>
-                  <div 
-                    className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center hover:border-slate-500/50 transition-colors cursor-pointer"
-                    onClick={() => document.getElementById('file-upload')?.click()}
-                  >
-                    <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm mb-2">
-                      {file ? file.name : 'Drop a file here or click to browse'}
-                    </p>
-                    <input
-                      type="file"
-                      accept=".txt,.pdf,.json,.md,.doc,.docx"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <Button variant="ghost" className="text-blue-400 hover:text-blue-300">
-                      Choose File
-                    </Button>
-                    {file && (
-                      <div className="mt-2 flex items-center justify-center space-x-2">
-                        <FileText className="h-4 w-4 text-green-400" />
-                        <span className="text-green-400 text-sm">{file.name}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setFile(null)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          ×
-                        </Button>
-                      </div>
-                    )}
+                {/* File Upload - Only show for manual input */}
+                {source === 'manual' && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">
+                      Upload File (Optional)
+                    </label>
+                    <div 
+                      className="border-2 border-dashed border-slate-600/50 rounded-lg p-6 text-center hover:border-slate-500/50 transition-colors cursor-pointer"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                    >
+                      <Upload className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-slate-400 text-sm mb-2">
+                        {file ? file.name : 'Drop a file here or click to browse'}
+                      </p>
+                      <input
+                        type="file"
+                        accept=".txt,.pdf,.json,.md,.doc,.docx"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        id="file-upload"
+                      />
+                      <Button variant="ghost" className="text-blue-400 hover:text-blue-300">
+                        Choose File
+                      </Button>
+                      {file && (
+                        <div className="mt-2 flex items-center justify-center space-x-2">
+                          <FileText className="h-4 w-4 text-green-400" />
+                          <span className="text-green-400 text-sm">{file.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setFile(null)}
+                            className="text-red-400 hover:text-red-300"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Text Input */}
                 <div>
@@ -434,7 +448,7 @@ const AnalysisPlayground = () => {
                 {/* Analyze Button */}
                 <Button
                   onClick={analyzeContent}
-                  disabled={isAnalyzing || (!content.trim() && !file)}
+                  disabled={isAnalyzing || (source === 'manual' ? (!content.trim() && !file) : !content.trim())}
                   className="w-full bg-gradient-to-r from-blue-500 to-violet-500 hover:from-blue-600 hover:to-violet-600 text-white border-0 disabled:opacity-50"
                 >
                   {isAnalyzing ? (

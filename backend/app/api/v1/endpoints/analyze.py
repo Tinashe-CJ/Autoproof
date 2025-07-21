@@ -151,6 +151,10 @@ async def analyze_content(
             )
             violations.append(violation)
 
+        # Debug: Print current_user structure
+        print(f"Debug: current_user keys: {list(current_user.keys())}")
+        print(f"Debug: current_user team_id: {current_user.get('team_id')}")
+        
         # Create violation records in database
         created_violations = []
         for violation in violations:
@@ -180,9 +184,14 @@ async def analyze_content(
             }
             
             # Insert violation into database
-            result = supabase.table("violation_logs").insert(violation_data).execute()
-            if result.data:
-                created_violations.append(result.data[0])
+            try:
+                result = supabase.table("violation_logs").insert(violation_data).execute()
+                if result.data:
+                    created_violations.append(result.data[0])
+            except Exception as e:
+                # Log the error but don't fail the analysis
+                print(f"Warning: Failed to log violation to database: {e}")
+                # Continue with analysis even if logging fails
 
         # Log analysis event
         await log_auth_event(

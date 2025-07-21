@@ -322,8 +322,8 @@ const Dashboard = () => {
                         <p className="text-slate-500 text-xs mt-2">
                           Renews: {(() => {
                             try {
-                              // Try to use the current_period_end from Stripe first
-                              const renewalDate = new Date(subscription.current_period_end * 1000);
+                              // Parse the ISO string directly (not a Unix timestamp)
+                              const renewalDate = new Date(subscription.current_period_end);
                               if (!isNaN(renewalDate.getTime())) {
                                 return renewalDate.toLocaleDateString();
                               }
