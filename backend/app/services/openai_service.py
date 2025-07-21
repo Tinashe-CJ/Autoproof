@@ -277,20 +277,25 @@ If no violations found, return empty array []."""
             else:
                 print(f"DEBUG: Unexpected response format: {response}")
                 return [], token_usage, PRIMARY_MODEL
-            
-            # Handle markdown-wrapped JSON
+
+            # Robustly handle markdown/code block and 'json' prefix
+            content = content.strip()
             if content.startswith("```json"):
-                content = content[7:]  # Remove ```json
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
             if content.endswith("```"):
-                content = content[:-3]  # Remove ```
-            
-            violations = json.loads(content.strip())
+                content = content[:-3]
+            content = content.strip()
+            if content.lower().startswith("json"):
+                content = content[4:].strip()
+            # Now try to parse
+            violations = json.loads(content)
             if not isinstance(violations, list):
                 violations = []
-        except (json.JSONDecodeError, KeyError, IndexError) as e:
+        except Exception as e:
             print(f"DEBUG: JSON parsing failed for model {PRIMARY_MODEL}: {e}")
-            if 'content' in locals():
-                print(f"DEBUG: Content was: {content}")
+            print(f"DEBUG: Content was: {content}")
             violations = []
         
         return violations, token_usage, PRIMARY_MODEL

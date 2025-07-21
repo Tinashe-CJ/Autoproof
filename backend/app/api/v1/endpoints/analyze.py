@@ -11,6 +11,7 @@ import time
 import logging
 import uuid
 from pathlib import Path
+from dataclasses import asdict
 
 from backend.app.core.supabase import get_supabase
 from backend.app.core.auth import (
@@ -295,6 +296,46 @@ class PaginatedViolationResponse(BaseModel):
     size: int
     pages: int
 
+def violation_to_dict(v):
+    d = asdict(v) if hasattr(v, "__dataclass_fields__") else dict(v)
+    for key, value in d.items():
+        if isinstance(value, Enum):
+            d[key] = value.value
+    return d
+
+def convert_enums(obj):
+    if isinstance(obj, Enum):
+        return obj.value
+    elif isinstance(obj, dict):
+        return {k: convert_enums(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_enums(i) for i in obj]
+    elif hasattr(obj, "__dataclass_fields__"):
+        return convert_enums(asdict(obj))
+    else:
+        return obj
+
+def fix_character_range(obj):
+    if isinstance(obj, dict):
+        new_obj = {}
+        for k, v in obj.items():
+            if k == "character_range" or k == "span":
+                if isinstance(v, tuple) and len(v) == 2:
+                    new_obj[k] = {"start": v[0], "end": v[1]}
+                elif isinstance(v, list) and len(v) == 2:
+                    new_obj[k] = {"start": v[0], "end": v[1]}
+                elif isinstance(v, dict) or v is None:
+                    new_obj[k] = v
+                else:
+                    new_obj[k] = v
+            else:
+                new_obj[k] = fix_character_range(v)
+        return new_obj
+    elif isinstance(obj, list):
+        return [fix_character_range(i) for i in obj]
+    else:
+        return obj
+
 @router.post("/", response_model=AnalysisResponse)
 async def analyze_content(
     request: Request,
@@ -344,7 +385,14 @@ async def analyze_content(
         # Run the enhanced compliance detection pipeline
         print("Running enhanced compliance detection pipeline...")
         pipeline_result = await ViolationPipeline().run_full_analysis(analysis_request.content, analysis_request.source.value)
-        
+
+        # Convert all violations in violations_by_stage to dicts with enums as strings recursively
+        for stage, vlist in pipeline_result.violations_by_stage.items():
+            pipeline_result.violations_by_stage[stage] = [fix_character_range(convert_enums(v)) for v in vlist]
+        # Also convert violations in stage_results
+        for stage_result in pipeline_result.stage_results:
+            stage_result.violations = [fix_character_range(convert_enums(v)) for v in stage_result.violations]
+
         # Convert pipeline violations to the expected format
         for violation in pipeline_result.violations_by_stage.get("regex_scanning", []):
             detected_violation = DetectedViolation(
@@ -499,6 +547,8 @@ async def analyze_content(
             processing_time_ms=processing_time_ms
         )
         
+        # Remove the code that tries to build detected_violations from violations_by_stage
+        # and instead return the violations list (already DetectedViolation objects) in the AnalysisResponse
         return AnalysisResponse(
             violations=violations,
             total_violations=len(violations),
