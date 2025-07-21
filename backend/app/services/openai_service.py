@@ -171,6 +171,134 @@ async def analyze_text(
     use_cache: bool = True
 ) -> Tuple[List[Dict[str, Any]], int]:
     """
+    Analyze text for compliance violations using OpenAI.
+    
+    Args:
+        text: Input text to analyze
+        source: Source of the content
+        analysis_type: Type of analysis to perform
+        use_cache: Whether to use cached results
+        
+    Returns:
+        Tuple of (violations, token_usage)
+    """
+    # For now, use the enhanced analysis function
+    violations, token_usage, _ = await analyze_text_with_openai(text, source)
+    return violations, token_usage
+
+async def analyze_text_with_openai(text: str, source: str, context: Dict[str, Any] = None) -> Tuple[List[Dict[str, Any]], int, str]:
+    """
+    Analyze text using OpenAI with enhanced context from the compliance pipeline.
+    
+    Args:
+        text: Input text to analyze
+        source: Source of the content
+        context: Additional context from pipeline stages
+        
+    Returns:
+        Tuple of (violations, token_usage, model_used)
+    """
+    # Prepare enhanced system prompt with context
+    system_prompt = """You are AutoProof, an advanced compliance analysis system. 
+
+Given the text, intermediate findings from pattern matching, and regulatory context, identify specific compliance violations.
+
+Previous analysis stages found:
+- Regex patterns: {regex_count} potential violations
+- NER analysis: {ner_count} entity-based violations  
+- Config linting: {config_count} configuration issues
+- Regulatory frameworks: {frameworks}
+
+Focus on:
+1. Regulatory compliance (SOC2, GDPR, HIPAA, PCI-DSS, SOX, ISO27001)
+2. Security misconfigurations
+3. Data protection violations
+4. Privacy concerns
+5. Access control issues
+
+Return a JSON array of violation objects, each with:
+- "type": violation category
+- "issue": specific problem description
+- "recommendation": actionable remediation steps
+- "severity": "low", "medium", "high", or "critical"
+- "confidence_score": 0.0-1.0 confidence level
+- "matched_content": relevant text excerpt (optional)
+
+If no violations found, return empty array []."""
+
+    # Format context for the prompt
+    regex_count = context.get("regex_violations", 0) if context else 0
+    ner_count = context.get("ner_violations", 0) if context else 0
+    config_count = context.get("config_violations", 0) if context else 0
+    frameworks = []
+    if context and "regulatory_contexts" in context:
+        frameworks = []
+        for ctx in context["regulatory_contexts"]:
+            regulation = ctx.get("regulation", "Unknown")
+            if hasattr(regulation, 'value'):
+                frameworks.append(regulation.value)
+            else:
+                frameworks.append(str(regulation))
+    
+    formatted_prompt = system_prompt.format(
+        regex_count=regex_count,
+        ner_count=ner_count,
+        config_count=config_count,
+        frameworks=", ".join(frameworks) if frameworks else "None detected"
+    )
+    
+    # Create user message with text and context
+    user_message = f"Text to analyze:\n{text}\n\nSource: {source}"
+    
+    if context and "compliance_recommendations" in context:
+        user_message += f"\n\nCompliance recommendations:\n"
+        for rec in context["compliance_recommendations"][:3]:  # Limit to top 3
+            user_message += f"- {rec['issue']}: {rec['recommendation']}\n"
+    
+    # Make the API call
+    try:
+        messages = [
+            {"role": "system", "content": formatted_prompt},
+            {"role": "user", "content": user_message}
+        ]
+        
+        # Use synchronous call for now (can be made async later)
+        import asyncio
+        loop = asyncio.get_event_loop()
+        response, token_usage = await _make_openai_request(messages, PRIMARY_MODEL, max_tokens=2048)
+        
+        # Parse the response
+        try:
+            # Handle our custom response format from _make_openai_request
+            if "content" in response:
+                content = response["content"]
+            elif "choices" in response and response["choices"]:
+                content = response["choices"][0]["message"]["content"]
+            else:
+                print(f"DEBUG: Unexpected response format: {response}")
+                return [], token_usage, PRIMARY_MODEL
+            
+            # Handle markdown-wrapped JSON
+            if content.startswith("```json"):
+                content = content[7:]  # Remove ```json
+            if content.endswith("```"):
+                content = content[:-3]  # Remove ```
+            
+            violations = json.loads(content.strip())
+            if not isinstance(violations, list):
+                violations = []
+        except (json.JSONDecodeError, KeyError, IndexError) as e:
+            print(f"DEBUG: JSON parsing failed for model {PRIMARY_MODEL}: {e}")
+            if 'content' in locals():
+                print(f"DEBUG: Content was: {content}")
+            violations = []
+        
+        return violations, token_usage, PRIMARY_MODEL
+        
+    except Exception as e:
+        print(f"DEBUG: Error in analyze_text_with_openai: {e}")
+        return [], 0, PRIMARY_MODEL
+    """
     Analyze the given text for compliance violations using OpenAI.
     
     Args:
@@ -334,4 +462,85 @@ def clear_cache():
     """Clear the cache"""
     global _cache
     _cache = {}
-    print("DEBUG: Cache cleared") 
+    print("DEBUG: Cache cleared")
+
+
+class ComplianceAnalyzer:
+    """Enhanced compliance analyzer for the violation pipeline."""
+    
+    def __init__(self):
+        self.model = PRIMARY_MODEL
+        self.max_tokens = 2048
+        self.temperature = 0.2
+    
+    async def analyze_compliance(
+        self, 
+        text: str, 
+        context: Dict[str, Any] = None
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        Analyze text for compliance violations with enhanced context.
+        
+        Args:
+            text: Text to analyze
+            context: Additional context from pipeline stages
+            
+        Returns:
+            Tuple of (violations, token_usage)
+        """
+        try:
+            violations, token_usage, _ = await analyze_text_with_openai(text, "api", context)
+            return violations, token_usage
+        except Exception as e:
+            print(f"DEBUG: Error in ComplianceAnalyzer.analyze_compliance: {e}")
+            return [], 0
+    
+    async def analyze_with_context(
+        self, 
+        text: str, 
+        context: Dict[str, Any] = None
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        Analyze text with context (alias for analyze_compliance).
+        
+        Args:
+            text: Text to analyze
+            context: Additional context from pipeline stages
+            
+        Returns:
+            Tuple of (violations, token_usage)
+        """
+        return await self.analyze_compliance(text, context)
+    
+    def get_analysis_summary(self, violations: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Generate a summary of the analysis results."""
+        if not violations:
+            return {
+                "total_violations": 0,
+                "severity_breakdown": {},
+                "type_breakdown": {},
+                "confidence_avg": 0.0
+            }
+        
+        severity_counts = {}
+        type_counts = {}
+        total_confidence = 0.0
+        
+        for violation in violations:
+            # Count by severity
+            severity = violation.get("severity", "medium")
+            severity_counts[severity] = severity_counts.get(severity, 0) + 1
+            
+            # Count by type
+            violation_type = violation.get("type", "unknown")
+            type_counts[violation_type] = type_counts.get(violation_type, 0) + 1
+            
+            # Sum confidence scores
+            total_confidence += violation.get("confidence_score", 0.0)
+        
+        return {
+            "total_violations": len(violations),
+            "severity_breakdown": severity_counts,
+            "type_breakdown": type_counts,
+            "confidence_avg": total_confidence / len(violations) if violations else 0.0
+        } 

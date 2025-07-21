@@ -27,6 +27,7 @@ from backend.app.services.openai_service import (
     TokenLimitError
 )
 from backend.app.services.policy_parser import PolicyParser
+from backend.app.services.violation_pipeline import ViolationPipeline
 
 # Comprehensive secret detection patterns
 SECRET_PATTERNS = {
@@ -340,13 +341,93 @@ async def analyze_content(
             )
             violations.append(violation)
 
-        # Add secret detection using regex patterns
-        lines = analysis_request.content.split('\n')
-        secret_violations = detect_secrets_in_content(analysis_request.content, lines)
-        violations.extend(secret_violations)
+        # Run the enhanced compliance detection pipeline
+        print("Running enhanced compliance detection pipeline...")
+        pipeline_result = await ViolationPipeline().run_full_analysis(analysis_request.content, analysis_request.source.value)
         
-        print(f"Debug: Found {len(secret_violations)} secrets using regex patterns")
-        print(f"Debug: Total violations: {len(violations)}")
+        # Convert pipeline violations to the expected format
+        for violation in pipeline_result.violations_by_stage.get("regex_scanning", []):
+            detected_violation = DetectedViolation(
+                policy_rule_id=None,
+                policy_rule_name=f"Regex: {violation.get('issue', 'Pattern detected')}",
+                violation_type=ViolationType.SECURITY_BREACH,
+                severity=ViolationSeverity(violation.get('severity', 'medium')),
+                title=violation.get('issue', 'Security pattern detected'),
+                description=violation.get('recommendation', 'Review and address this security issue'),
+                matched_content=violation.get('matched_content', ''),
+                confidence_score=violation.get('confidence_score', 0.8),
+                line_number=violation.get('line_number'),
+                character_range=violation.get('span')
+            )
+            violations.append(detected_violation)
+        
+        # Add NER violations
+        for violation in pipeline_result.violations_by_stage.get("ner_analysis", []):
+            detected_violation = DetectedViolation(
+                policy_rule_id=None,
+                policy_rule_name=f"NER: {violation.get('issue', 'Entity detected')}",
+                violation_type=ViolationType.DATA_LEAK,
+                severity=ViolationSeverity(violation.get('severity', 'medium')),
+                title=violation.get('issue', 'PII entity detected'),
+                description=violation.get('recommendation', 'Review for potential PII exposure'),
+                matched_content=violation.get('matched_content', ''),
+                confidence_score=violation.get('confidence_score', 0.8),
+                line_number=violation.get('line_number'),
+                character_range=violation.get('span')
+            )
+            violations.append(detected_violation)
+        
+        # Add config linting violations
+        for violation in pipeline_result.violations_by_stage.get("config_linting", []):
+            detected_violation = DetectedViolation(
+                policy_rule_id=None,
+                policy_rule_name=f"Config: {violation.get('issue', 'Misconfiguration')}",
+                violation_type=ViolationType.SECURITY_BREACH,
+                severity=ViolationSeverity(violation.get('severity', 'medium')),
+                title=violation.get('issue', 'Security misconfiguration'),
+                description=violation.get('recommendation', 'Fix security configuration issue'),
+                matched_content=violation.get('matched_content', ''),
+                confidence_score=violation.get('confidence_score', 0.9),
+                line_number=violation.get('line_number'),
+                character_range=None
+            )
+            violations.append(detected_violation)
+        
+        # Add regulatory violations
+        for violation in pipeline_result.violations_by_stage.get("regulatory_analysis", []):
+            detected_violation = DetectedViolation(
+                policy_rule_id=None,
+                policy_rule_name=f"Regulatory: {violation.get('regulation', 'Compliance')}",
+                violation_type=ViolationType.COMPLIANCE_ISSUE,
+                severity=ViolationSeverity(violation.get('severity', 'medium')),
+                title=violation.get('issue', 'Regulatory compliance issue'),
+                description=violation.get('recommendation', 'Address regulatory compliance requirement'),
+                matched_content=violation.get('matched_content', ''),
+                confidence_score=violation.get('confidence_score', 0.8),
+                line_number=None,
+                character_range=None
+            )
+            violations.append(detected_violation)
+        
+        # Add LLM violations
+        for violation in pipeline_result.violations_by_stage.get("llm_analysis", []):
+            detected_violation = DetectedViolation(
+                policy_rule_id=None,
+                policy_rule_name=f"LLM: {violation.get('title', 'AI Analysis')}",
+                violation_type=ViolationType.COMPLIANCE_ISSUE,
+                severity=ViolationSeverity(violation.get('severity', 'medium')),
+                title=violation.get('title', 'AI detected compliance issue'),
+                description=violation.get('description', 'AI analysis identified potential compliance issue'),
+                matched_content=violation.get('matched_content', ''),
+                confidence_score=violation.get('confidence_score', 0.8),
+                line_number=violation.get('line_number'),
+                character_range=violation.get('character_range')
+            )
+            violations.append(detected_violation)
+        
+        print(f"Pipeline completed: {pipeline_result.total_violations} total violations")
+        print(f"Processing time: {pipeline_result.total_processing_time_ms:.2f}ms")
+        print(f"Token usage: {pipeline_result.token_usage}")
 
         # Debug: Print current_user structure
         print(f"Debug: current_user keys: {list(current_user.keys())}")
