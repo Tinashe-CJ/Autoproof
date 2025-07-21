@@ -28,6 +28,195 @@ from backend.app.services.openai_service import (
 )
 from backend.app.services.policy_parser import PolicyParser
 
+# Comprehensive secret detection patterns
+SECRET_PATTERNS = {
+    "aws_access_key_id": {
+        "pattern": r"AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}",
+        "description": "AWS Access Key ID",
+        "severity": "high"
+    },
+    "aws_secret_access_key": {
+        "pattern": r"[A-Za-z0-9/+=]{40}",
+        "description": "AWS Secret Access Key",
+        "severity": "critical"
+    },
+    "aws_session_token": {
+        "pattern": r"[A-Za-z0-9/+=]{256,500}",
+        "description": "AWS Session Token",
+        "severity": "high"
+    },
+    "stripe_secret_key": {
+        "pattern": r"sk_(live|test)_[0-9a-zA-Z]{24}",
+        "description": "Stripe Secret Key",
+        "severity": "critical"
+    },
+    "stripe_publishable_key": {
+        "pattern": r"pk_(live|test)_[0-9a-zA-Z]{24}",
+        "description": "Stripe Publishable Key",
+        "severity": "medium"
+    },
+    "stripe_restricted_key": {
+        "pattern": r"rk_(live|test)_[0-9a-zA-Z]{24}",
+        "description": "Stripe Restricted Key",
+        "severity": "high"
+    },
+    "twilio_account_sid": {
+        "pattern": r"AC[0-9a-f]{32}",
+        "description": "Twilio Account SID",
+        "severity": "medium"
+    },
+    "twilio_auth_token": {
+        "pattern": r"[0-9a-f]{32}",
+        "description": "Twilio Auth Token",
+        "severity": "critical"
+    },
+    "github_pat": {
+        "pattern": r"(ghp|gho|ghu|ghr|ghs)_[A-Za-z0-9_]{36}",
+        "description": "GitHub Personal Access Token",
+        "severity": "critical"
+    },
+    "gitlab_pat": {
+        "pattern": r"glpat-[A-Za-z0-9]{20}",
+        "description": "GitLab Personal Access Token",
+        "severity": "critical"
+    },
+    "slack_token": {
+        "pattern": r"xox[baprs]-[A-Za-z0-9-]+",
+        "description": "Slack Token",
+        "severity": "high"
+    },
+    "slack_webhook": {
+        "pattern": r"https://hooks\.slack\.com/services/[A-Za-z0-9/]+",
+        "description": "Slack Webhook URL",
+        "severity": "high"
+    },
+    "sendgrid_api_key": {
+        "pattern": r"SG\.[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}",
+        "description": "SendGrid API Key",
+        "severity": "critical"
+    },
+    "datadog_api_key": {
+        "pattern": r"[0-9a-f]{32}",
+        "description": "Datadog API Key",
+        "severity": "high"
+    },
+    "datadog_app_key": {
+        "pattern": r"[0-9a-f]{40}",
+        "description": "Datadog App Key",
+        "severity": "high"
+    },
+    "new_relic_license": {
+        "pattern": r"NRAK-[A-Za-z0-9]+",
+        "description": "New Relic License Key",
+        "severity": "high"
+    },
+    "heroku_api_key": {
+        "pattern": r"[A-Za-z0-9_-]{30,40}",
+        "description": "Heroku API Key",
+        "severity": "high"
+    },
+    "google_service_account": {
+        "pattern": r"-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----",
+        "description": "Google Cloud Service Account Private Key",
+        "severity": "critical"
+    },
+    "google_api_key": {
+        "pattern": r"AIza[0-9A-Za-z\\-_]{35}",
+        "description": "Google API Key",
+        "severity": "high"
+    },
+    "firebase_database_url": {
+        "pattern": r"https://[A-Za-z0-9\-]+\.firebaseio\.com",
+        "description": "Firebase Database URL with secret",
+        "severity": "medium"
+    },
+    "azure_storage_key": {
+        "pattern": r"[A-Za-z0-9+/=]{80,100}",
+        "description": "Azure Storage Account Key",
+        "severity": "critical"
+    },
+    "azure_sas_token": {
+        "pattern": r"sv=[0-9]{8}&ss=[a-z]+&srt=[a-z]+&sp=[a-z]+&se=[0-9TZ:&\-\.]+&sig=[A-Za-z0-9%]+",
+        "description": "Azure SAS Token",
+        "severity": "high"
+    },
+    "azure_client_secret": {
+        "pattern": r"[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}",
+        "description": "Azure Client Secret GUID",
+        "severity": "critical"
+    },
+    "mailgun_api_key": {
+        "pattern": r"key-[0-9A-Za-z]{32}",
+        "description": "Mailgun API Key",
+        "severity": "high"
+    },
+    "mailchimp_api_key": {
+        "pattern": r"[0-9a-f]{32}-us[0-9]{1,2}",
+        "description": "Mailchimp API Key",
+        "severity": "high"
+    },
+    "pusher_app_key": {
+        "pattern": r"[A-Za-z0-9]{16}",
+        "description": "Pusher App Key",
+        "severity": "medium"
+    },
+    "pusher_secret": {
+        "pattern": r"[A-Za-z0-9]{32}",
+        "description": "Pusher Secret",
+        "severity": "high"
+    },
+    "algolia_admin_key": {
+        "pattern": r"[0-9a-f]{32}",
+        "description": "Algolia Admin API Key",
+        "severity": "critical"
+    },
+    "algolia_search_key": {
+        "pattern": r"[0-9a-f]{32}",
+        "description": "Algolia Search-only Key",
+        "severity": "medium"
+    },
+    "cloudinary_url": {
+        "pattern": r"cloudinary://[A-Za-z0-9]+:[A-Za-z0-9]+@",
+        "description": "Cloudinary URL with credentials",
+        "severity": "high"
+    },
+    "ssh_rsa_private_key": {
+        "pattern": r"-----BEGIN RSA PRIVATE KEY-----[\s\S]+?-----END RSA PRIVATE KEY-----",
+        "description": "SSH RSA Private Key",
+        "severity": "critical"
+    },
+    "ssh_openssh_private_key": {
+        "pattern": r"-----BEGIN OPENSSH PRIVATE KEY-----[\s\S]+?-----END OPENSSH PRIVATE KEY-----",
+        "description": "SSH OpenSSH Private Key",
+        "severity": "critical"
+    },
+    "jwt_token": {
+        "pattern": r"[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+",
+        "description": "JWT Token",
+        "severity": "medium"
+    },
+    "postgres_url": {
+        "pattern": r"postgres(?:ql)?://[^:\s]+:[^@\s]+@[^:\s]+:\d+/\S+",
+        "description": "PostgreSQL Database URL with credentials",
+        "severity": "critical"
+    },
+    "mysql_url": {
+        "pattern": r"mysql://[^:\s]+:[^@\s]+@[^:\s]+:\d+/\S+",
+        "description": "MySQL Database URL with credentials",
+        "severity": "critical"
+    },
+    "generic_secret_keyword": {
+        "pattern": r"(?i)(secret|password|passwd|token|api[_-]?key).{8,}",
+        "description": "Generic secret/keyword pattern",
+        "severity": "medium"
+    },
+    "base64_long_string": {
+        "pattern": r"(?:[A-Za-z0-9+/]{40,}={0,2})",
+        "description": "Long Base64 string (potential secret)",
+        "severity": "medium"
+    }
+}
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -150,6 +339,14 @@ async def analyze_content(
                 character_range=None
             )
             violations.append(violation)
+
+        # Add secret detection using regex patterns
+        lines = analysis_request.content.split('\n')
+        secret_violations = detect_secrets_in_content(analysis_request.content, lines)
+        violations.extend(secret_violations)
+        
+        print(f"Debug: Found {len(secret_violations)} secrets using regex patterns")
+        print(f"Debug: Total violations: {len(violations)}")
 
         # Debug: Print current_user structure
         print(f"Debug: current_user keys: {list(current_user.keys())}")
@@ -367,6 +564,98 @@ def count_violations_by_severity(violations: List[DetectedViolation]) -> Dict[st
     for violation in violations:
         counts[violation.severity.value] += 1
     return counts
+
+def detect_secrets_in_content(content: str, lines: List[str]) -> List[DetectedViolation]:
+    """
+    Detect secrets in content using comprehensive regex patterns.
+    Returns list of DetectedViolation objects for found secrets.
+    """
+    violations = []
+    
+    # Context-aware detection - only apply certain patterns in code-like contexts
+    is_code_context = any([
+        content.strip().startswith('```'),
+        any(line.strip().startswith('$') for line in lines[:5]),  # Shell commands
+        any('=' in line and ':' in line for line in lines[:10]),  # Config files
+        any(line.strip().startswith('#') for line in lines[:5]),  # Comments
+    ])
+    
+    for secret_type, pattern_info in SECRET_PATTERNS.items():
+        pattern = pattern_info["pattern"]
+        description = pattern_info["description"]
+        severity = pattern_info["severity"]
+        
+        try:
+            matches = re.finditer(pattern, content, re.MULTILINE | re.IGNORECASE)
+            
+            for match in matches:
+                matched_content = match.group(0)
+                start_pos = match.start()
+                end_pos = match.end()
+                
+                # Find the line number for this match
+                line_number = None
+                for i, line in enumerate(lines):
+                    if start_pos < len(''.join(lines[:i+1])):
+                        line_number = i + 1
+                        break
+                
+                # Calculate character range within the line
+                character_range = None
+                if line_number:
+                    line_start = len(''.join(lines[:line_number-1]))
+                    character_range = {
+                        "start": start_pos - line_start,
+                        "end": end_pos - line_start
+                    }
+                
+                # Context-aware confidence scoring
+                confidence_score = 0.8  # Base confidence
+                
+                # Reduce confidence for generic patterns in non-code contexts
+                if not is_code_context and secret_type in [
+                    "generic_secret_keyword", 
+                    "base64_long_string",
+                    "jwt_token"
+                ]:
+                    confidence_score *= 0.6
+                
+                # Increase confidence for specific service patterns
+                if secret_type in [
+                    "stripe_secret_key", 
+                    "aws_secret_access_key", 
+                    "github_pat",
+                    "google_service_account",
+                    "ssh_rsa_private_key",
+                    "ssh_openssh_private_key"
+                ]:
+                    confidence_score = 0.95
+                
+                # Skip very low confidence matches
+                if confidence_score < 0.5:
+                    continue
+                
+                # Create violation
+                violation = DetectedViolation(
+                    policy_rule_id=None,  # No specific policy rule for secret detection
+                    policy_rule_name=f"Secret Detection: {description}",
+                    violation_type=ViolationType.SECURITY_BREACH,
+                    severity=ViolationSeverity(severity),
+                    title=f"Detected {description}",
+                    description=f"Potential {description.lower()} found in content. This may be a security risk if exposed.",
+                    matched_content=matched_content,
+                    confidence_score=confidence_score,
+                    line_number=line_number,
+                    character_range=character_range
+                )
+                
+                violations.append(violation)
+                
+        except re.error as e:
+            logger.warning(f"Invalid regex pattern for {secret_type}: {e}")
+            continue
+    
+    return violations
 
 @router.get("/violations", response_model=PaginatedViolationResponse)
 async def get_violations(

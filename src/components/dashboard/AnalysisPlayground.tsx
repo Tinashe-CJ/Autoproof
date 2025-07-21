@@ -522,40 +522,53 @@ const AnalysisPlayground = () => {
                         <p className="text-slate-500 text-sm">Your content appears to be compliant</p>
                       </div>
                     ) : (
-                      <div className="space-y-4">
-                        <h3 className="text-white font-medium">Detected Violations</h3>
-                        {results.violations.map((violation, index) => (
-                          <div
-                            key={index}
-                            className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30"
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="text-white font-medium">
-                                {typeof violation.title === 'string' ? violation.title : JSON.stringify(violation.title || '')}
-                              </h4>
-                              <Badge className={getSeverityColor(typeof violation.severity === 'string' ? violation.severity : 'medium')}>
-                                {typeof violation.severity === 'string' ? violation.severity : 'medium'}
-                              </Badge>
-                            </div>
-                            <p className="text-slate-300 text-sm mb-3">
-                              {typeof violation.description === 'string' ? violation.description : JSON.stringify(violation.description || '')}
-                            </p>
-                            <div className="flex items-center justify-between text-xs text-slate-500">
-                              <span>Confidence: {Math.round((violation.confidence_score || 0) * 100)}%</span>
-                              <span>Type: {typeof violation.violation_type === 'string' ? violation.violation_type : JSON.stringify(violation.violation_type || '')}</span>
-                            </div>
-                            {violation.matched_content && (
-                              <div className="mt-3 p-3 bg-slate-600/30 rounded border-l-4 border-yellow-500/50">
-                                <p className="text-slate-400 text-xs mb-1">Matched Content:</p>
-                                <p className="text-slate-300 text-sm font-mono">
-                                  "{typeof violation.matched_content === 'string' 
-                                    ? violation.matched_content 
-                                    : JSON.stringify(violation.matched_content)}"
-                                </p>
+                      <div>
+                        <h3 className="text-white font-medium mb-4">Detected Violations</h3>
+                        <div className="max-h-[600px] overflow-y-auto pr-2 space-y-3" style={{
+                          scrollbarWidth: 'thin',
+                          scrollbarColor: 'rgba(71, 85, 105, 0.8) rgba(30, 41, 59, 0.5)'
+                        }}>
+                          {results.violations.map((violation, index) => (
+                            <div
+                              key={index}
+                              className="p-4 bg-slate-700/40 rounded-lg border border-slate-600/30 hover:bg-slate-700/60 hover:border-slate-500/50 transition-all duration-200 cursor-pointer group"
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <h4 className="text-white font-medium group-hover:text-blue-300 transition-colors">
+                                  {typeof violation.title === 'string' ? violation.title : JSON.stringify(violation.title || '')}
+                                </h4>
+                                <Badge className={getSeverityColor(typeof violation.severity === 'string' ? violation.severity : 'medium')}>
+                                  {typeof violation.severity === 'string' ? violation.severity : 'medium'}
+                                </Badge>
                               </div>
-                            )}
-                          </div>
-                        ))}
+                              <p className="text-slate-300 text-sm mb-3 overflow-hidden" style={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical' as const,
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {typeof violation.description === 'string' ? violation.description : JSON.stringify(violation.description || '')}
+                              </p>
+                              <div className="flex items-center justify-between text-xs text-slate-500">
+                                <span>Confidence: {Math.round((violation.confidence_score || 0) * 100)}%</span>
+                                <span>Type: {typeof violation.violation_type === 'string' ? violation.violation_type : JSON.stringify(violation.violation_type || '')}</span>
+                              </div>
+                              {violation.matched_content && (
+                                <div className="mt-3 p-3 bg-slate-600/30 rounded border-l-4 border-yellow-500/50">
+                                  <p className="text-slate-400 text-xs mb-1">Matched Content:</p>
+                                  <p className="text-slate-300 text-sm font-mono" style={{
+                                    wordBreak: 'break-all',
+                                    overflowWrap: 'break-word'
+                                  }}>
+                                    "{typeof violation.matched_content === 'string' 
+                                      ? violation.matched_content 
+                                      : JSON.stringify(violation.matched_content)}"
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
 
