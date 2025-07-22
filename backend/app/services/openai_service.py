@@ -434,6 +434,20 @@ async def analyze_text_compliance(text: str, source: str) -> Tuple[List[Dict[str
     """
     return await analyze_text(text, source, "compliance")
 
+async def analyze_with_model(model: str, messages: list[dict], max_tokens: int = 1024, temperature: float = 0.2) -> tuple[list[dict], int]:
+    """
+    Analyze with a specific OpenAI model, returning parsed violations and token usage.
+    """
+    response_data, total_tokens = await _make_openai_request(messages, model, max_tokens=max_tokens, temperature=temperature)
+    content = response_data["content"]
+    try:
+        violations = json.loads(content) if content else []
+    except Exception as e:
+        print(f"DEBUG: JSON parsing failed in analyze_with_model: {e}")
+        print(f"DEBUG: Raw content: {content}")
+        violations = []
+    return violations, total_tokens
+
 # Logging and monitoring functions
 def log_analysis_event(
     source: str, 

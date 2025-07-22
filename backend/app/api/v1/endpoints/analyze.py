@@ -29,6 +29,7 @@ from backend.app.services.openai_service import (
 )
 from backend.app.services.policy_parser import PolicyParser
 from backend.app.services.violation_pipeline import ViolationPipeline
+from backend.app.core.config import settings
 
 # Comprehensive secret detection patterns
 SECRET_PATTERNS = {
@@ -347,42 +348,8 @@ async def analyze_content(
     Analyze content against policy rules and detect violations using OpenAI
     """
     start_time = time.time()
-    
     try:
-        # Use OpenAI for analysis
-        openai_violations, token_usage = await analyze_text(
-            analysis_request.content,
-            analysis_request.source.value,
-            "compliance",
-            use_cache=True
-        )
-        
-        # Convert OpenAI violations to DetectedViolation format
-        violations = []
-        for openai_violation in openai_violations:
-            # Map OpenAI violation to DetectedViolation
-            severity_map = {
-                "low": ViolationSeverity.LOW,
-                "medium": ViolationSeverity.MEDIUM,
-                "high": ViolationSeverity.HIGH,
-                "critical": ViolationSeverity.CRITICAL
-            }
-            
-            violation = DetectedViolation(
-                policy_rule_id=None,  # OpenAI doesn't provide rule IDs
-                policy_rule_name=openai_violation.get("type", "AI Detected"),
-                violation_type=ViolationType.COMPLIANCE_ISSUE,
-                severity=severity_map.get(openai_violation.get("severity", "medium").lower(), ViolationSeverity.MEDIUM),
-                title=f"AI Detected: {openai_violation.get('type', 'Compliance Issue')}",
-                description=openai_violation.get("issue", ""),
-                matched_content=analysis_request.content[:200] + "..." if len(analysis_request.content) > 200 else analysis_request.content,
-                confidence_score=0.8,  # Default confidence for AI detection
-                line_number=None,
-                character_range=None
-            )
-            violations.append(violation)
-
-        # Run the enhanced compliance detection pipeline
+        # Run the enhanced compliance detection pipeline (tiered LLM)
         print("Running enhanced compliance detection pipeline...")
         pipeline_result = await ViolationPipeline().run_full_analysis(analysis_request.content, analysis_request.source.value)
 
@@ -394,6 +361,7 @@ async def analyze_content(
             stage_result.violations = [fix_character_range(convert_enums(v)) for v in stage_result.violations]
 
         # Convert pipeline violations to the expected format
+        violations = []
         for violation in pipeline_result.violations_by_stage.get("regex_scanning", []):
             detected_violation = DetectedViolation(
                 policy_rule_id=None,
@@ -408,7 +376,6 @@ async def analyze_content(
                 character_range=violation.get('span')
             )
             violations.append(detected_violation)
-        
         # Add NER violations
         for violation in pipeline_result.violations_by_stage.get("ner_analysis", []):
             detected_violation = DetectedViolation(
@@ -424,7 +391,6 @@ async def analyze_content(
                 character_range=violation.get('span')
             )
             violations.append(detected_violation)
-        
         # Add config linting violations
         for violation in pipeline_result.violations_by_stage.get("config_linting", []):
             detected_violation = DetectedViolation(
@@ -440,7 +406,6 @@ async def analyze_content(
                 character_range=None
             )
             violations.append(detected_violation)
-        
         # Add regulatory violations
         for violation in pipeline_result.violations_by_stage.get("regulatory_analysis", []):
             detected_violation = DetectedViolation(
@@ -456,7 +421,6 @@ async def analyze_content(
                 character_range=None
             )
             violations.append(detected_violation)
-        
         # Add LLM violations
         for violation in pipeline_result.violations_by_stage.get("llm_analysis", []):
             detected_violation = DetectedViolation(
@@ -472,15 +436,11 @@ async def analyze_content(
                 character_range=violation.get('character_range')
             )
             violations.append(detected_violation)
-        
         print(f"Pipeline completed: {pipeline_result.total_violations} total violations")
         print(f"Processing time: {pipeline_result.total_processing_time_ms:.2f}ms")
         print(f"Token usage: {pipeline_result.token_usage}")
-
-        # Debug: Print current_user structure
         print(f"Debug: current_user keys: {list(current_user.keys())}")
         print(f"Debug: current_user team_id: {current_user.get('team_id')}")
-        
         # Create violation records in database
         created_violations = []
         for violation in violations:
@@ -503,22 +463,17 @@ async def analyze_content(
                     "character_range": violation.character_range,
                     "analysis_metadata": analysis_request.metadata,
                     "ai_analysis": True,
-                    "token_usage": token_usage
+                    "token_usage": pipeline_result.token_usage
                 },
                 "created_by": current_user["id"],
                 "created_at": datetime.now().isoformat()
             }
-            
-            # Insert violation into database
             try:
                 result = supabase.table("violation_logs").insert(violation_data).execute()
                 if result.data:
                     created_violations.append(result.data[0])
             except Exception as e:
-                # Log the error but don't fail the analysis
                 print(f"Warning: Failed to log violation to database: {e}")
-                # Continue with analysis even if logging fails
-
         # Log analysis event
         await log_auth_event(
             supabase,
@@ -532,23 +487,19 @@ async def analyze_content(
                 "content_length": len(analysis_request.content),
                 "violations_detected": len(violations),
                 "ai_analysis": True,
-                "token_usage": token_usage
+                "token_usage": pipeline_result.token_usage
             }
         )
-
-        # Log OpenAI analysis event
+        # Log OpenAI analysis event (use tiered model info)
         processing_time_ms = int((time.time() - start_time) * 1000)
         log_analysis_event(
             source=analysis_request.source.value,
             text_length=len(analysis_request.content),
             violations_count=len(violations),
-            token_usage=token_usage,
-            model_used="gpt-4o-mini",
+            token_usage=pipeline_result.token_usage,
+            model_used=f"tiered:{getattr(settings, 'GPT_MODEL_BULK', 'gpt-3.5-turbo')}+{getattr(settings, 'GPT_MODEL_EDGE', 'gpt-4-mini')}",
             processing_time_ms=processing_time_ms
         )
-        
-        # Remove the code that tries to build detected_violations from violations_by_stage
-        # and instead return the violations list (already DetectedViolation objects) in the AnalysisResponse
         return AnalysisResponse(
             violations=violations,
             total_violations=len(violations),
@@ -556,12 +507,11 @@ async def analyze_content(
                 "source": analysis_request.source.value,
                 "content_length": len(analysis_request.content),
                 "ai_analysis": True,
-                "token_usage": token_usage,
+                "token_usage": pipeline_result.token_usage,
                 "violations_by_severity": count_violations_by_severity(violations)
             },
             processing_time_ms=processing_time_ms
         )
-
     except RateLimitError as e:
         raise HTTPException(
             status_code=http_status.HTTP_429_TOO_MANY_REQUESTS,

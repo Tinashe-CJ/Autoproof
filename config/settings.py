@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     BUSINESS_REQUESTS_LIMIT: int = 50000
     BUSINESS_TOKENS_LIMIT: int = 5000000
     
+    # LLM Model Selection
+    GPT_MODEL_BULK: str = "gpt-3.5-turbo"
+    GPT_MODEL_EDGE: str = "gpt-4-mini"
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

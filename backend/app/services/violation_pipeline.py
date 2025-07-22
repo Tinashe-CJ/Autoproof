@@ -8,13 +8,15 @@ import logging
 from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
+import json
 
 # Import all pipeline stages
 from backend.app.services.regex_checks import scan_all_regex_patterns, get_violation_summary as get_regex_summary
 from backend.app.services.ner_checks import tag_entities, filter_ner_violations, get_ner_summary
 from backend.app.services.config_linter import lint_configs, get_config_summary
 from backend.app.services.rag_service import retrieve_regulation_context, analyze_regulatory_compliance, get_regulatory_summary
-from backend.app.services.openai_service import ComplianceAnalyzer
+from backend.app.services.openai_service import ComplianceAnalyzer, analyze_with_model
+from config.settings import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -320,38 +322,68 @@ class ViolationPipeline:
             )
     
     async def _run_llm_stage(self, text: str, source: str, pre_violations: List[Dict[str, Any]]) -> PipelineResult:
-        """Run LLM analysis with context from previous stages."""
+        """Run LLM analysis with tiered model selection (bulk + edge-case review)."""
         start_time = time.time()
-        
         try:
             # Retrieve regulatory context for LLM
             contexts = retrieve_regulation_context(text)
-            
-            # Prepare context for LLM analysis
             context = {
                 "pre_violations": pre_violations,
                 "regulatory_contexts": [ctx.__dict__ for ctx in contexts] if contexts else []
             }
-            
-            # Run LLM analysis with enhanced context
-            llm_violations, token_usage = await self.compliance_analyzer.analyze_with_context(
-                text=text,
-                context=context
+            # Build prompt for bulk analysis
+            def build_bulk_prompt(text, contexts, pre_violations):
+                # Simple prompt builder, can be improved
+                return [
+                    {"role": "system", "content": "You are a compliance analysis assistant. Analyze the following text for violations."},
+                    {"role": "user", "content": text}
+                ]
+            def build_final_prompt(text, contexts, edge_cases):
+                # Simple prompt builder for edge cases
+                return [
+                    {"role": "system", "content": "You are a compliance expert. Review these edge-case violations for accuracy and severity."},
+                    {"role": "user", "content": json.dumps(edge_cases)}
+                ]
+            def merge_violations(bulk, final):
+                seen = set()
+                merged = []
+                for v in bulk + final:
+                    key = (v.get('issue'), tuple(v.get('span', {}).items()) if isinstance(v.get('span'), dict) else v.get('span'))
+                    if key not in seen:
+                        seen.add(key)
+                        merged.append(v)
+                return merged
+            # Bulk pass (gpt-3.5-turbo)
+            bulk_msgs = build_bulk_prompt(text, contexts, pre_violations)
+            bulk_res, bulk_tokens = await analyze_with_model(
+                model=getattr(settings, 'GPT_MODEL_BULK', 'gpt-3.5-turbo'),
+                messages=bulk_msgs,
+                max_tokens=512
             )
-            
+            # Edge-case filter
+            edge_cases = [v for v in bulk_res if v.get('severity', '').lower() == 'high' or v.get('ambiguous')]
+            if edge_cases:
+                final_msgs = build_final_prompt(text, contexts, edge_cases)
+                final_res, final_tokens = await analyze_with_model(
+                    model=getattr(settings, 'GPT_MODEL_EDGE', 'gpt-4-mini'),
+                    messages=final_msgs,
+                    max_tokens=256
+                )
+                merged = merge_violations(bulk_res, final_res)
+                total_tokens = bulk_tokens + final_tokens
+            else:
+                merged = bulk_res
+                total_tokens = bulk_tokens
             processing_time = (time.time() - start_time) * 1000
-            
-            logger.info(f"LLM stage: {len(llm_violations)} violations found in {processing_time:.2f}ms")
-            
+            logger.info(f"LLM stage (tiered): {len(merged)} violations found in {processing_time:.2f}ms")
             return PipelineResult(
                 stage=PipelineStage.LLM_ANALYSIS,
-                violations=llm_violations,
+                violations=merged,
                 processing_time_ms=processing_time,
-                summary={"violations_count": len(llm_violations)},
+                summary={"violations_count": len(merged)},
                 success=True,
-                token_usage=token_usage
+                token_usage=total_tokens
             )
-            
         except Exception as e:
             logger.error(f"LLM stage failed: {e}")
             return PipelineResult(
