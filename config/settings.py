@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     
     # LLM Model Selection
     GPT_MODEL_BULK: str = "gpt-3.5-turbo"
-    GPT_MODEL_EDGE: str = "gpt-4-mini"
+    GPT_MODEL_EDGE: str = "gpt-4o-mini"
     
     class Config:
         env_file = ".env"

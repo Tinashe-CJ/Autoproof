@@ -322,7 +322,7 @@ class ViolationPipeline:
             )
     
     async def _run_llm_stage(self, text: str, source: str, pre_violations: List[Dict[str, Any]]) -> PipelineResult:
-        """Run LLM analysis with tiered model selection (bulk + edge-case review)."""
+        """Run LLM analysis with prioritized gpt-3.5-turbo, escalate to gpt-4o-mini only if needed."""
         start_time = time.time()
         try:
             # Retrieve regulatory context for LLM
@@ -331,27 +331,20 @@ class ViolationPipeline:
                 "pre_violations": pre_violations,
                 "regulatory_contexts": [ctx.__dict__ for ctx in contexts] if contexts else []
             }
-            # Build prompt for bulk analysis
             def build_bulk_prompt(text, contexts, pre_violations):
-                # Simple prompt builder, can be improved
                 return [
                     {"role": "system", "content": "You are a compliance analysis assistant. Analyze the following text for violations."},
                     {"role": "user", "content": text}
                 ]
-            def build_final_prompt(text, contexts, edge_cases):
-                # Simple prompt builder for edge cases
-                return [
-                    {"role": "system", "content": "You are a compliance expert. Review these edge-case violations for accuracy and severity."},
-                    {"role": "user", "content": json.dumps(edge_cases)}
-                ]
-            def merge_violations(bulk, final):
+            def merge_violations(*violation_lists):
                 seen = set()
                 merged = []
-                for v in bulk + final:
-                    key = (v.get('issue'), tuple(v.get('span', {}).items()) if isinstance(v.get('span'), dict) else v.get('span'))
-                    if key not in seen:
-                        seen.add(key)
-                        merged.append(v)
+                for vlist in violation_lists:
+                    for v in vlist:
+                        key = (v.get('issue'), tuple(v.get('span', {}).items()) if isinstance(v.get('span'), dict) else v.get('span'))
+                        if key not in seen:
+                            seen.add(key)
+                            merged.append(v)
                 return merged
             # Bulk pass (gpt-3.5-turbo)
             bulk_msgs = build_bulk_prompt(text, contexts, pre_violations)
@@ -360,22 +353,46 @@ class ViolationPipeline:
                 messages=bulk_msgs,
                 max_tokens=512
             )
-            # Edge-case filter
-            edge_cases = [v for v in bulk_res if v.get('severity', '').lower() == 'high' or v.get('ambiguous')]
-            if edge_cases:
-                final_msgs = build_final_prompt(text, contexts, edge_cases)
-                final_res, final_tokens = await analyze_with_model(
-                    model=getattr(settings, 'GPT_MODEL_EDGE', 'gpt-4-mini'),
-                    messages=final_msgs,
-                    max_tokens=256
+            # If gpt-3.5-turbo returns no violations or only 'no violation' messages, escalate to gpt-4o-mini
+            def is_no_violation_output(violations):
+                if not violations:
+                    return True
+                # Accepts both string and dict outputs
+                for v in violations:
+                    desc = v.get('description', '') if isinstance(v, dict) else str(v)
+                    if desc.strip() and not any(
+                        phrase in desc.lower() for phrase in [
+                            'no compliance violations',
+                            'no violations detected',
+                            'no issues found',
+                            'no compliance issues',
+                            'no policy violations',
+                            'no security violations',
+                            'no problems found',
+                            'no issues were found',
+                            'no violation detected',
+                            'no apparent violations',
+                            'does not contain any violations',
+                            'does not contain any compliance violations'
+                        ]
+                    ):
+                        return False
+                return True
+            if is_no_violation_output(bulk_res):
+                # Escalate to gpt-4o-mini
+                edge_msgs = build_bulk_prompt(text, contexts, pre_violations)
+                edge_res, edge_tokens = await analyze_with_model(
+                    model=getattr(settings, 'GPT_MODEL_EDGE', 'gpt-4o-mini'),
+                    messages=edge_msgs,
+                    max_tokens=512
                 )
-                merged = merge_violations(bulk_res, final_res)
-                total_tokens = bulk_tokens + final_tokens
+                merged = merge_violations(edge_res)
+                total_tokens = bulk_tokens + edge_tokens
             else:
-                merged = bulk_res
+                merged = merge_violations(bulk_res)
                 total_tokens = bulk_tokens
             processing_time = (time.time() - start_time) * 1000
-            logger.info(f"LLM stage (tiered): {len(merged)} violations found in {processing_time:.2f}ms")
+            logger.info(f"LLM stage (prioritized): {len(merged)} violations found in {processing_time:.2f}ms")
             return PipelineResult(
                 stage=PipelineStage.LLM_ANALYSIS,
                 violations=merged,

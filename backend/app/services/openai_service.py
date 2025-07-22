@@ -9,6 +9,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from datetime import datetime, timedelta
 from openai import AsyncOpenAI
 from backend.app.core.config import settings
+import re
 
 # Initialize OpenAI client with proper error handling
 try:
@@ -434,9 +435,51 @@ async def analyze_text_compliance(text: str, source: str) -> Tuple[List[Dict[str
     """
     return await analyze_text(text, source, "compliance")
 
+NO_VIOLATION_PHRASES = [
+    "no compliance violations",
+    "no violations detected",
+    "no issues found",
+    "no compliance issues",
+    "no policy violations",
+    "no security violations",
+    "no problems found",
+    "no issues were found",
+    "no violation detected"
+]
+
+NO_VIOLATION_PATTERNS = [
+    r"no (apparent )?compliance violations",
+    r"does not contain any (apparent )?compliance violations",
+    r"no (apparent )?violations",
+    r"does not contain any (apparent )?violations",
+    r"no violations detected",
+    r"no issues found",
+    r"no compliance issues",
+    r"no policy violations",
+    r"no security violations",
+    r"no problems found",
+    r"no issues were found",
+    r"no violation detected",
+    r"there (is|are) no (apparent )?compliance violations",
+    r"there (is|are) no (apparent )?violations",
+    r"the text provided does not contain any (apparent )?compliance violations",
+    r"the text provided does not contain any (apparent )?violations",
+    r"no evidence of (apparent )?compliance violations",
+    r"no evidence of (apparent )?violations",
+    r"no (apparent )?violations present"
+]
+
+def _llm_output_indicates_no_violation(content: str) -> bool:
+    content_lc = content.strip().lower()
+    for pattern in NO_VIOLATION_PATTERNS:
+        if re.search(pattern, content_lc):
+            return True
+    return False
+
 async def analyze_with_model(model: str, messages: list[dict], max_tokens: int = 1024, temperature: float = 0.2) -> tuple[list[dict], int]:
     """
     Analyze with a specific OpenAI model, returning parsed violations and token usage.
+    If the LLM returns non-JSON output, wrap it in a violation dict unless it matches a 'no violation' pattern.
     """
     response_data, total_tokens = await _make_openai_request(messages, model, max_tokens=max_tokens, temperature=temperature)
     content = response_data["content"]
@@ -445,7 +488,17 @@ async def analyze_with_model(model: str, messages: list[dict], max_tokens: int =
     except Exception as e:
         print(f"DEBUG: JSON parsing failed in analyze_with_model: {e}")
         print(f"DEBUG: Raw content: {content}")
-        violations = []
+        # Broader detection for 'no violation' LLM outputs
+        if content and _llm_output_indicates_no_violation(content):
+            return [], total_tokens
+        # Otherwise, treat as a single violation
+        violations = [{
+            "title": "AI Compliance Analysis",
+            "description": content,
+            "severity": "high",
+            "confidence": 0.8,
+            "type": "compliance_issue"
+        }]
     return violations, total_tokens
 
 # Logging and monitoring functions

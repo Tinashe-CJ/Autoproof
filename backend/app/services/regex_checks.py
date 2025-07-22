@@ -63,6 +63,27 @@ UNAPPROVED_SHARING_PATTERN = re.compile(
     re.IGNORECASE
 )
 
+# Secret/API Key Patterns (add to security misconfigs)
+SECRET_PATTERNS = [
+    # Stripe
+    re.compile(r'sk_(live|test)_[0-9a-zA-Z]{16,}', re.IGNORECASE),
+    re.compile(r'pk_(live|test)_[0-9a-zA-Z]{16,}', re.IGNORECASE),
+    # AWS
+    re.compile(r'AKIA[0-9A-Z]{16}', re.IGNORECASE),
+    re.compile(r'ASIA[0-9A-Z]{16}', re.IGNORECASE),
+    re.compile(r'aws_secret_access_key\s*[=:]\s*[0-9a-zA-Z/+]{40}', re.IGNORECASE),
+    # Google API
+    re.compile(r'AIza[0-9A-Za-z\-_]{35}', re.IGNORECASE),
+    # GitHub
+    re.compile(r'ghp_[0-9A-Za-z]{36,}', re.IGNORECASE),
+    # Slack
+    re.compile(r'xox[baprs]-[0-9a-zA-Z-]{10,}', re.IGNORECASE),
+    # Generic JWT
+    re.compile(r'eyJ[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+\.[A-Za-z0-9\-_]+'),
+    # Generic secret
+    re.compile(r'(secret|api[_-]?key|token|access[_-]?key|private[_-]?key)\s*[=:]\s*[0-9a-zA-Z\-\/_\+]{8,}', re.IGNORECASE),
+]
+
 def scan_pii(text: str) -> List[Violation]:
     """
     Scan text for Personally Identifiable Information (PII).
@@ -151,13 +172,7 @@ def scan_pii(text: str) -> List[Violation]:
 
 def scan_security_misconfigs(text: str) -> List[Violation]:
     """
-    Scan text for security misconfigurations.
-    
-    Args:
-        text: Input text to scan
-        
-    Returns:
-        List of security misconfiguration violations found
+    Scan text for security misconfigurations and secrets/API keys.
     """
     violations = []
     
@@ -221,6 +236,19 @@ def scan_security_misconfigs(text: str) -> List[Violation]:
             matched_content=match.group(),
             confidence_score=0.8
         ))
+    
+    # Secret/API Key Detection
+    for pattern in SECRET_PATTERNS:
+        for match in pattern.finditer(text):
+            violations.append(Violation(
+                type=ViolationType.SECURITY,
+                issue="Secret/API key detected",
+                recommendation="Remove secrets/API keys from code and logs. Use environment variables or secret managers.",
+                severity=Severity.CRITICAL,
+                span=match.span(),
+                matched_content=match.group(),
+                confidence_score=0.99
+            ))
     
     return violations
 

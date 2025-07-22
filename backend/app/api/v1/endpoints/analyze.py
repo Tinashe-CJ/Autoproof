@@ -436,6 +436,8 @@ async def analyze_content(
                 character_range=violation.get('character_range')
             )
             violations.append(detected_violation)
+        # Prioritize LLM violations at the top of the list
+        violations.sort(key=lambda v: 0 if v.policy_rule_name.startswith("LLM:") else 1)
         print(f"Pipeline completed: {pipeline_result.total_violations} total violations")
         print(f"Processing time: {pipeline_result.total_processing_time_ms:.2f}ms")
         print(f"Token usage: {pipeline_result.token_usage}")
