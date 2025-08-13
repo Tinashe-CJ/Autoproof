@@ -1,0 +1,553 @@
+# Ignore environment and secret files
+.env
+.env.*
+*.env
+prd.txt
+
+# Ignore test and debug scripts
+check_billing_info_and_team.py
+check_billing_data.py
+fix_stripe_customer.py
+cleanup_billing.py
+update_customer_metadata.py
+update_billing_info.py
+test_db_connection.py
+test_ssl_connection.py
+test_connection_methods.py
+create_test_user.py
+setup_database.py
+reset_database.py
+test_stripe.py
+list_stripe_prices.py
+get_long_jwt.sh
+check_stripe_config.py
+test_trial.py
+test_checkout_plans.py
+refresh_jwt.sh
+test_auth.py
+debug_auth.js
+
+# Additional test and debug files
+test_*.py
+*_test.py
+debug_*.py
+performance_test.py
+auto_test_*.py
+simple_auto_test.py
+test_checkout_speed.py
+test_with_real_jwt.py
+get_real_jwt.py
+get_*.jwt.sh
+get_*.jwt.py
+*.jwt
+*.jwt.txt
+
+# Ignore node and Python artifacts
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+logs/
+temp/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Supabase generated files
+supabase/.env
+supabase/.temp
+supabase/.output
+
+# Stripe and payment related
+stripe-*.json
+*.pem
+certs/
+
+# API keys and secrets (additional patterns)
+*_key.txt
+*_secret.txt
+api_keys.txt
+secrets.txt
+
+# Build and deployment
+.next/
+.nuxt/
+dist/
+build/
+out/
+
+# Coverage reports
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+TODO.md
+
+# Logs
+logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dev-debug.log
+# Dependency directories
+# Environment variables
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# OS specific
+
+# Additional secrets and sensitive files
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
+keys/
+certs/
+certificates/
+
+# Test files and scripts
+test_*.py
+*_test.py
+test_*.js
+*_test.js
+test_*.ts
+*_test.ts
+test_*.html
+*_test.html
+test_*.sh
+*_test.sh
+debug_*.py
+debug_*.js
+debug_*.ts
+debug_*.sh
+performance_test.py
+auto_test_*.py
+simple_auto_test.py
+test_checkout_speed.py
+test_with_real_jwt.py
+get_real_jwt.py
+get_*.jwt.sh
+get_*.jwt.py
+*.jwt
+*.jwt.txt
+
+# Test directories and coverage
+tests/
+test/
+__tests__/
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+nosetests.xml
+coverage/
+
+# Test configuration files
+pytest.ini
+tox.ini
+setup.cfg
+.covrc
+.coveragerc
+
+# Test data and fixtures
+test_data/
+fixtures/
+test_fixtures/
+sample_data/
+mock_data/
+
+# Test reports and outputs
+test_reports/
+test_output/
+test_results/
+junit.xml
+test-results.xml
+
+# Configuration files with secrets
+config/secrets.py
+config/local.py
+config/dev.py
+config/prod.py
+config/staging.py
+
+# Database dumps and backups
+*.sql
+*.dump
+*.backup
+backups/
+dumps/
+
+# Temporary and cache files
+.tmp/
+.temp/
+cache/
+.cache/
+
+# Local development files
+local/
+dev/
+staging/
+
+# API documentation with examples
+docs/api-examples/
+docs/test-examples/
+
+# Stripe test files
+stripe-test-*.py
+stripe-test-*.js
+stripe-test-*.ts
+
+# Additional sensitive data patterns
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+*.cer
+*.der
+
+# API keys and tokens
+api_keys.txt
+api_keys.json
+tokens.txt
+tokens.json
+secrets.json
+credentials.json
+service_account.json
+firebase-key.json
+google-credentials.json
+
+# Environment and configuration
+.env.local
+.env.development
+.env.test
+.env.staging
+.env.production
+.env.*.local
+.env.*.development
+.env.*.test
+.env.*.staging
+.env.*.production
+
+# Authentication and session files
+.session
+.sessions/
+auth_tokens.json
+clerk_tokens.json
+jwt_tokens.json
+
+# Database credentials and connections
+database_urls.txt
+db_credentials.json
+connection_strings.txt
+
+# Payment and billing sensitive data
+stripe_keys.json
+stripe_webhooks.json
+payment_keys.json
+billing_credentials.json
+
+# Cloud provider credentials
+aws_credentials.json
+azure_credentials.json
+gcp_credentials.json
+cloudflare_credentials.json
+
+# SSL certificates and keys
+ssl/
+certificates/
+certs/
+keys/
+private_keys/
+
+# Logs with sensitive information
+logs/
+*.log
+debug.log
+error.log
+access.log
+auth.log
+payment.log
+
+# Backup files with sensitive data
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
+# IDE and editor files that might contain sensitive data
+.vscode/settings.json
+.idea/workspace.xml
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js specific sensitive files
+.npmrc
+.yarnrc
+.yarnrc.yml
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python specific sensitive files
+pip.conf
+pip-log.txt
+pip-delete-this-directory.txt
+poetry.lock
+Pipfile.lock
+
+# Docker and container sensitive files
+.dockerignore
+docker-compose.override.yml
+docker-compose.prod.yml
+Dockerfile.prod
+
+# CI/CD sensitive files
+.github/workflows/secrets.yml
+.gitlab-ci.yml
+.travis.yml
+.circleci/config.yml
+azure-pipelines.yml
+
+# Monitoring and analytics sensitive data
+sentry.properties
+newrelic.ini
+datadog.yml
+grafana.ini
+prometheus.yml
+test_stripe.py
+list_stripe_prices.py
+test_checkout_plans.py
+test_trial.py
+
+# Auth test files
+test_auth.py
+debug_auth.js
+get_long_jwt.sh
+refresh_jwt.sh
+get_clerk_jwt.sh
+get_clerk_org_jwt.sh
+get_clerk_org_jwt_verbose.sh
+get_fresh_jwt.sh
+get_simple_jwt.sh
+
+# Billing test files
+check_billing_info_and_team.py
+check_billing_data.py
+fix_stripe_customer.py
+cleanup_billing.py
+update_customer_metadata.py
+update_billing_info.py
+check_stripe_config.py
+
+# Database test files
+test_db_connection.py
+test_ssl_connection.py
+test_connection_methods.py
+create_test_user.py
+setup_database.py
+reset_database.py
+
+# Performance test files
+performance.py
+optimize_checkout.py
+
+# Frontend test files
+test_frontend_checkout.html
+corrected-stripe-checkout.ts
+fixed-stripe-checkout-with-clerk.ts
+stripe-checkout-fixed.ts
+
+# Analysis and documentation files
+checkout_performance_analysis.md
+BILLING_INTEGRATION.md
+BILLING_PAGE_FIXES_SUMMARY.md
+PRICING_PAGE_FIX_SUMMARY.md
+
+# Database migration test files
+test_database_sql.sql
+fix_role_column.sql
+fix_enum_and_seed.py
+check_enums.py
+check_seed_issues.py
+check_users.py
+apply_seed_data.py
+
+# Additional test files in root directory
+test_jwt.py
+test_billing.py
+test_checkout.py
+test_checkout_endpoint.py
+test_user_creation.py
+test_stripe_checkout.py
+test_database.py
+test_stripe_config.py
+test_with_real_jwt.py
+debug_backend.py
+simple_auto_test.py
+auto_test_checkout.py
+test_checkout_speed.py
+performance_test.py
+optimize_checkout.py
+
+# OpenAI integration test files
+test_openai_integration.py
+test_api_endpoints.py
+test_api_usage_example.py
+
+# Additional patterns for future files
+*.secret
+*.private
+*_secret
+*_private
+secrets.json
+private.json
+config.json
+credentials.json
+service-account.json
+firebase-key.json
+google-credentials.json
+aws-credentials.json
+azure-credentials.json
+
+# IDE and editor specific
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# Taskmaster files (optional - uncomment if you don't want to track tasks)
+# .taskmaster/
+
+# Task files
+# tasks.json
+# tasks/ 
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
